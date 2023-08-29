@@ -1,0 +1,13 @@
+Flask
+Flask-Caching
+Flask-Compress
+Flask-Session
+numpy
+openpyxl
+xlrd
+orjson
+pandas
+plotly
+Werkzeug
+xlsx2csv
+scipy

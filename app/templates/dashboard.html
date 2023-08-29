@@ -1,0 +1,934 @@
+<!DOCTYPE html>
+<script src="{{ url_for('static',filename='js/plotly-latest.min.js') }}"></script>
+<script src="{{ url_for('static',filename='js/d3.min.js') }}"></script>
+<script src="{{ url_for('static',filename='js/jquery.min.js') }}"></script>
+<link href="{{ url_for('static',filename='css/bootstrap.min.css') }}" rel="stylesheet" type= "text/css">
+<script src="{{ url_for('static',filename='js/popper.min.js') }}"></script>
+<script src="{{ url_for('static',filename='js/bootstrap.min.js') }}"></script>
+<script src="{{ url_for('static',filename='js/bootstrap-select.min.js') }}"></script>
+<link rel="stylesheet" href="{{ url_for('static',filename='css/bootstrap-select.min.css') }}">
+<link rel="stylesheet" href="{{ url_for('static',filename='css/style.css') }}">
+<script src="{{ url_for('static',filename='js/epivizor.js') }}"></script>
+
+<head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    <title>Dashboard</title>
+    <link rel="shortcut icon" href="{{ url_for('static', filename='favicon.ico') }}">
+</head>
+
+
+
+
+<body>
+
+{% with messages = get_flashed_messages() %}
+  {% if messages and render_splash_screen == False %}
+    <script>
+        var concat_messages="{{ messages|join(";") }}";
+        alert(concat_messages.replaceAll(';','\n'));
+    </script>
+  {% endif %}
+{% endwith %}
+
+{% if render_splash_screen %}
+<div id="overlay">
+    <h1 style="text-align: center">Validation screen</h1>
+    <p style="text-align: center">Validate and map data fields to be rendered.
+        If field names defer from defaults, perform column mapping below. Check expected and observed field types.</p>
+
+    <p style="text-align: center">Input file name: <b>{{file_uploaded}}</b>. Uploaded data shape (#rows, #columns):
+        <b>{{metadata['data_shape']}}</b>.
+    </p>
+    <p style="text-align:center;"><b>Delimiter symbol</b> separating individual values in profile and hierarchical fields:
+        <select class="form-select" id="delimiter_selector" style="width:70px;display:inline">
+            <option>|</option>
+            <option>||</option>
+            <option>;</option>
+            <option>:</option>
+            <option>*</option>
+            <option>$</option>
+            <option>=</option>
+            <option>-</option>
+            <option>#</option>
+            <option>@</option>
+            <option>^</option>
+            <option>+</option>
+            <option>,</option>
+            <option>.</option>
+            <option>/</option>
+            <option>\</option>
+        </select>
+    </p>
+
+    <table class='input_variables_table'>
+        <caption>Input variables summary and mapping table</caption>
+        <tr>
+            <th>Observed field&nbsp;&nbsp;
+                <div class="tooltip">
+                <img id="lock_button" onclick="unlock_observed_fields()""; src={{ url_for('static',filename='lock_open_icon.png')}}>
+                <span class="tooltiptext">Click to unlock the dropdowns</span>
+                </div>
+            </th>
+            <th>Expected field</th>
+            <th>Expected type</th>
+            <th>Data filters</th>
+            <th>Total values</th>
+            <th>Unique values</th>
+            <th>Missing values</th>
+            <th>Warnings</th>
+            <th>Tips</th>
+
+        </tr>
+        {%for field_exp in metadata['fields_types_expected'] | sort(case_sensitive=False) %}
+            <tr id={{ field_exp }}>
+                <td>
+                    <select class="form-select" onchange=update_validate_table_row(this.value,"{{field_exp}}",document.getElementById("{{ field_exp }}"))
+                    {% if field_exp in metadata['fields_observed'] %}
+                        disabled>
+                        <option selected">{{field_exp}}</option>
+                    {% else %}
+                        >
+                        <option selected>{{metadata['fields_observed'].last}}</option>
+                    {% endif %}
+                        
+                    {%for field_obs in metadata['fields_observed'] %}
+                        <option value="{{field_obs}}">{{field_obs}}</option>
+                    {%endfor%}
+                    </select>
+                </td>
+
+                <td>{{field_exp}}</td>
+                <td>{{metadata['fields_types_expected'][field_exp]}}</td>
+                <td>{{metadata['fields_types_expected_group_filters_avail'][field_exp]}}</td>
+                <td>{{metadata['fields_counts_observed'][field_exp]}}</td>
+                <td>{{metadata['fields_counts_unique_observed'][field_exp]}}</td>
+                <td>{{metadata['fields_counts_missing_observed'][field_exp]}}</td>
+                {% if field_exp in metadata['fields_observed']%}
+                <td>{{metadata['warnings'][field_exp]}}</td>
+                {% else %}
+                <td>Observed field DOES NOT match the expected field ('{{field_exp }}')</td>
+                {% endif %}
+                <td><div class="tooltip">
+                    <img style="width: 20px; height: 20px"
+                         src="{{ url_for('static',filename='info_icon.png')}}"/>
+                    <span class="tooltiptext">{{metadata['fields_types_expected_info'][field_exp]}}</span>
+                    </div>
+                </td>
+
+            </tr>
+        {%endfor%}
+    </table>
+    <br>
+    <div style="text-align: center">
+        <button type="button" onclick="submitValidatedFields()" class="btn btn-primary center">SUBMIT</button>
+        <button type="button" onclick="location.href='/';" class="btn btn-danger center">CANCEL</button>
+    </div>
+</div>
+{% endif %}
+
+
+<div class="flex-container">
+    <div id="navbar">
+        <div id="container_filters_div">
+            <div class="accordion" id="myAccordion">
+                <div class="accordion-item">
+                    <div class="accordion-header">
+                        <span class="accordion-button collapsed fw-bold text-break" data-bs-toggle="collapse"
+                              data-bs-target="#accordion_section_filters_subset1">FILTERS GROUP #1</span>
+                    </div>
+                    <div class="accordion-body collapse" id="accordion_section_filters_subset1">
+                        <div class="accordion-item">
+                            <div class="accordion-header">
+                                <span class="accordion-button collapsed text-break" data-bs-toggle="collapse"
+                                      data-bs-target="#primary_type_filter1">
+                                    Primary type
+                                    {% if 'primary_type' in session['validatedfields_exp2obs_map'] %}
+                                    ({{session['validatedfields_exp2obs_map']['primary_type']}})
+                                    {% endif %}
+                                </span>
+                            </div>
+                            <div id="primary_type_filter1" class="accordion-collapse collapse">
+                                <!--div class="dropdown bootstrap-select show-tick"--> <!--Field Organism-->
+                                    <select class="d-inline selectpicker" id="select_primary_type_filterset1" data-size="10"
+                                            data-live-search="true" data-actions-box="true"
+                                            name="select_primary_type_filterset1" multiple="true" tabindex="null">
+                                        {% if 'primary_type' in filters_fields2values_dict %}
+                                            {% for value in filters_fields2values_dict['primary_type'] %}
+                                                <option value="{{ value }}">{{ value }}</option>
+                                            {% endfor %}
+                                        {% endif %}
+                                    </select>
+                                <!--/div-->
+                            </div>
+                        </div>
+                        <div class="accordion-item">
+                            <div class="accordion-header">
+                                <span class="accordion-button collapsed text-break" data-bs-toggle="collapse"
+                                      data-bs-target="#secondary_type_filter1">
+                                    Secondary type
+                                    {% if 'secondary_type' in session['validatedfields_exp2obs_map'] %}
+                                        ({{session['validatedfields_exp2obs_map']['secondary_type']}})
+                                    {% endif %}
+                                </span>
+                            </div>
+                            <div id="secondary_type_filter1" class="accordion-collapse collapse"> <!--Field Type-->
+                                <!--div class="dropdown bootstrap-select show-tick"-->
+                                    <select class="d-inline selectpicker" id="select_secondary_type_filterset1" data-size="10"
+                                            data-live-search="true" data-container="body" data-actions-box="true"
+                                            name="select_serotypes_filterset1" multiple="true" tabindex="null" data-live-search="true">
+                                        {% if 'secondary_type' in filters_fields2values_dict %}
+                                            {% for value in filters_fields2values_dict['secondary_type'] %}
+                                                <option value="{{ value }}">{{ value }}</option>
+                                            {% endfor %}
+                                        {% endif %}
+                                    </select>
+                                <!--/div-->
+                            </div>
+                        </div>
+                        <div class="accordion-item">
+                            <div class="accordion-header">
+                                <span class="accordion-button collapsed text-break" data-bs-toggle="collapse"
+                                      data-bs-target="#genetic_profile_filter1">
+                                    Genetic profile
+                                    {% if 'genetic_profile' in session['validatedfields_exp2obs_map'] %}
+                                        ({{session['validatedfields_exp2obs_map']['genetic_profile']}})
+                                    {% endif %}
+                                </span>
+                            </div>
+                            <div id="genetic_profile_filter1" class="accordion-collapse collapse">
+                                <!--div class="dropdown bootstrap-select show-tick"-->
+                                    <select class="d-inline selectpicker" id="select_genetic_profile_filterset1"
+                                            data-size="10" data-actions-box="true"
+                                            name="select_genetic_profile_filterset1" multiple="true" tabindex="null"
+                                            data-live-search="true">
+                                        {% if 'genetic_profile' in filters_fields2values_dict %}
+                                            {% for value in filters_fields2values_dict['genetic_profile'] %}
+                                                <option value="{{ value }}">{{ value }}</option>
+                                            {% endfor %}
+                                        {% endif %}
+                                    </select>
+                                <!--div-->
+                            </div>
+                        </div>
+                        <div class="accordion-item">
+                            <div class="accordion-header">
+                                <span class="accordion-button collapsed text-break" data-bs-toggle="collapse"
+                                      data-bs-target="#phenotypic_profile_filter1">
+                                    Phenotypic profile
+                                    {% if 'phenotypic_profile' in session['validatedfields_exp2obs_map'] %}
+                                        ({{session['validatedfields_exp2obs_map']['phenotypic_profile']}})
+                                    {% endif %}
+                                </span>
+                            </div>
+                            <div id="phenotypic_profile_filter1" class="accordion-collapse collapse"> <!--Field SISTR-->
+                                <!--div class="dropdown bootstrap-select show-tick"-->
+                                    <select class="d-inline selectpicker" id="select_phenotypic_profile_filterset1"
+                                            data-size="10" data-actions-box="true"
+                                            name="select_phenotypic_profile_filterset1" multiple="true" tabindex="null"
+                                            data-live-search="true">
+                                        {% if 'phenotypic_profile' in filters_fields2values_dict %}
+                                            {% for value in filters_fields2values_dict['phenotypic_profile'] %}
+                                                <option value="{{ value }}">{{ value }}</option>
+                                            {% endfor %}
+                                        {% endif %}
+                                    </select>
+                                <!--/div-->
+                            </div>
+                        </div>
+                        <div class="accordion-item">
+                            <div class="accordion-header">
+                                <span class="accordion-button collapsed text-break" data-bs-toggle="collapse"
+                                      data-bs-target="#date_range_filter1">Date range</span>
+                            </div>
+                            <div id="date_range_filter1" class="accordion-collapse collapse"> <!--Field IsolatDate-->
+                                <span>
+                                <label for="start_date_filterset1">Start: </label>
+                                <input type="date" id="start_date_filterset1" name="start_date_filterset1">
+                                <br />
+                                <label for="end_date_filterset1">End  :</label>
+                                <input type="date" id="end_date_filterset1" name="end_date_filterset1">
+                                </span>
+                            </div>
+                        </div>
+                        <div class="accordion-item">
+                            <div class="accordion-header">
+                                <span class="accordion-button collapsed text-break" data-bs-toggle="collapse"
+                                      data-bs-target="#cluster_id_filter1">
+                                    Cluster ID
+                                    {% if 'cluster_id' in session['validatedfields_exp2obs_map'] %}
+                                        ({{session['validatedfields_exp2obs_map']['cluster_id']}})
+                                    {% endif %}
+                                </span>
+                            </div>
+                            <div id="cluster_id_filter1" class="accordion-collapse collapse">
+                                <!--Field IsolatDate-->
+                                <!--div class="dropdown bootstrap-select show-tick"-->
+                                    <select class="d-inline selectpicker" id="select_cluster_id_filterset1"
+                                            name="select_cluster_id_filterset1" multiple="true" data-actions-box="true"
+                                            data-width="auto" data-size="10" data-live-search="true"
+                                            data-container="body">
+                                        {% if 'cluster_id' in filters_fields2values_dict %}
+                                            {% for value in filters_fields2values_dict['cluster_id'] %}
+                                                <option value="{{ value }}">{{ value }}</option>
+                                            {% endfor %}
+                                        {% endif %}
+                                    </select>
+                                <!--/div-->
+                            </div>
+                        </div>
+                        <div class="accordion-item">
+                            <div class="accordion-header">
+                                <span class="accordion-button collapsed text-break" data-bs-toggle="collapse"
+                                      data-bs-target="#investigation_id_filter1">
+                                    Investigation ID
+                                    {% if 'investigation_id' in session['validatedfields_exp2obs_map'] %}
+                                        ({{session['validatedfields_exp2obs_map']['investigation_id']}})
+                                    {% endif %}
+                                </span>
+                            </div>
+                            <div id="investigation_id_filter1" class="accordion-collapse collapse">
+                                <!--Field IsolatDate-->
+                                <!--div class="dropdown bootstrap-select show-tick"-->
+                                    <select class="d-inline selectpicker" id="select_investigation_id_filterset1"
+                                            name="select_investigation_id_filterset1" multiple="true"
+                                            data-width="auto" data-size="10" data-live-search="true"
+                                            data-container="body" data-actions-box="true">
+                                        {% if 'investigation_id' in filters_fields2values_dict %}
+                                            {% for value in filters_fields2values_dict['investigation_id'] %}
+                                                <option value="{{ value }}">{{ value }}</option>
+                                            {% endfor %}
+                                        {% endif %}
+                                    </select>
+                                <!--/div-->
+                            </div>
+                        </div>
+                        <div class="accordion-item">
+                            <div class="accordion-header">
+                                    <span class="accordion-button collapsed text-break" data-bs-toggle="collapse"
+                                          data-bs-target="#genotype_hierarchy_groups_filter1">
+                                        Hierarchical subtypes
+                                        {% if 'hierarchical_subtype' in session['validatedfields_exp2obs_map'] %}
+                                            ({{session['validatedfields_exp2obs_map']['hierarchical_subtype']}})
+                                        {% endif %}
+                                    </span>
+                            </div>
+                            <div id="genotype_hierarchy_groups_filter1" class="accordion-collapse collapse">
+                                <!--Field IsolatDate-->
+                                <!--div class="dropdown bootstrap-select show-tick"-->
+                                    {% for field_name, unique_values in  filters_fields2values_dict.items() %}
+                                        {% if 'hs_level_' in field_name %}
+                                            <div class="accordion-item">
+                                                <div class="accordion-header">
+                                                    <span class="accordion-button collapsed text-break" data-bs-toggle="collapse"
+                                                        data-bs-target="#{{ field_name }}_f1_accordion_item_content">
+                                                        {{ field_name }}
+                                                    </span>
+                                                </div>
+                                                <!--span class="fw-bold">{{ field_name }}</span-->
+                                                <div id="{{ field_name }}_f1_accordion_item_content" class="accordion-collapse collapse">
+                                                    <select class="d-inline selectpicker"
+                                                                     id="select_{{ field_name }}_genotype_hierarchy_groups_filterset1"
+                                                                     name="select_{{ field_name }}_genotype_hierarchy_groups_filterset1"
+                                                                     multiple="true" data-actions-box="true"
+                                                                     data-width="auto" data-size="10" data-live-search="true"
+                                                                     data-container="body">
+                                                    {% for value in unique_values %}
+                                                        <option value="{{ value }}">{{ value }}</option>
+                                                    {% endfor %}
+                                                     </select>
+                                                </div>
+                                            </div>
+                                        {% endif %}
+                                    {% endfor %}
+                                <!--/div-->
+                            </div>
+                        </div>
+                        <div class="accordion-item">
+                            <div class="accordion-header">
+                                    <span class="accordion-button collapsed text-break" data-bs-toggle="collapse"
+                                          data-bs-target="#sample_source_site_filter1">
+                                        Source site
+                                        {% if 'source_site' in session['validatedfields_exp2obs_map'] %}
+                                            ({{session['validatedfields_exp2obs_map']['source_site']}})
+                                        {% endif %}
+                                    </span>
+                            </div>
+                            <div id="sample_source_site_filter1" class="accordion-collapse collapse"> <!--Field source_type-->
+                                <!--div class="dropdown bootstrap-select show-tick"-->
+                                    <select class="d-inline selectpicker" id="select_source_site_filterset1"
+                                            data-live-search="true" data-actions-box="true"
+                                            name="select_source_site_filterset1" data-size="10" multiple="true"
+                                            tabindex="null">
+                                        {% if 'source_site' in filters_fields2values_dict %}
+                                            {% for value in filters_fields2values_dict['source_site'] %}
+                                                <option value="{{ value }}">{{ value }}</option>
+                                            {% endfor %}
+                                        {% endif %}
+                                    </select>
+                                <!--/div-->
+                            </div>
+                        </div>
+                        <div class="accordion-item">
+                            <div class="accordion-header">
+                                    <span class="accordion-button collapsed text-break" data-bs-toggle="collapse"
+                                          data-bs-target="#sample_source_type_filter1">
+                                        Source type
+                                        {% if 'source_type' in session['validatedfields_exp2obs_map'] %}
+                                            ({{session['validatedfields_exp2obs_map']['source_type']}})
+                                        {% endif %}
+                                    </span>
+                            </div>
+                            <div id="sample_source_type_filter1" class="accordion-collapse collapse"> <!--Field source_type-->
+                                <!--div class="dropdown bootstrap-select show-tick"-->
+                                    <select class="d-inline selectpicker" id="select_source_type_filterset1"
+                                            data-live-search="true" data-actions-box="true"
+                                            name="select_source_type_filterset1" data-size="10" multiple="true"
+                                            tabindex="null">
+                                        {% if 'source_type' in filters_fields2values_dict %}
+                                            {% for value in filters_fields2values_dict['source_type'] %}
+                                                <option value="{{ value }}">{{ value }}</option>
+                                            {% endfor %}
+                                        {% endif %}
+                                    </select>
+                                <!--/div-->
+                            </div>
+                        </div>
+                        <div class="accordion-item">
+                            <div class="accordion-header">
+                                    <span class="accordion-button collapsed text-break" data-bs-toggle="collapse"
+                                          data-bs-target="#geoloc_id_filter1">
+                                        Geolocation id
+                                        {% if 'geoloc_id' in session['validatedfields_exp2obs_map'] %}
+                                            ({{session['validatedfields_exp2obs_map']['geoloc_id']}})
+                                        {% endif %}
+                                    </span>
+                            </div>
+                            <div id="geoloc_id_filter1" class="accordion-collapse collapse">
+                                <!--Field source_type-->
+                                <!--div class="dropdown bootstrap-select show-tick"-->
+                                    <select class="d-inline selectpicker" id="select_geoloc_id_filterset1"
+                                            data-live-search="true" data-actions-box="true"
+                                            name="select_geoloc_id_filterset1" data-size="10" multiple="true"
+                                            tabindex="null">
+                                        {% if 'geoloc_id' in filters_fields2values_dict %}
+                                            {% for value in filters_fields2values_dict['geoloc_id'] %}
+                                                <option value="{{ value }}">{{ value }}</option>
+                                            {% endfor %}
+                                        {% endif %}
+                                    </select>
+                                <!--/div-->
+                            </div>
+                        </div>
+                    </div>
+
+                </div>
+                <div class="accordion-item">
+                    <div class="accordion-header">
+                        <span class="accordion-button collapsed fw-bold text-break" data-bs-toggle="collapse"
+                              data-bs-target="#accordion_section_filters_subset2">FILTERS GROUP #2</span>
+                    </div>
+                    <div class="accordion-body collapse" id="accordion_section_filters_subset2">
+                        <div class="accordion-item">
+                            <div class="accordion-header">
+                                <span class="accordion-button collapsed text-break" data-bs-toggle="collapse"
+                                      data-bs-target="#primary_type_filter2">
+                                    Primary type
+                                    {% if 'primary_type' in session['validatedfields_exp2obs_map'] %}
+                                        ({{session['validatedfields_exp2obs_map']['primary_type']}})
+                                    {% endif %}
+                                </span>
+                            </div>
+                            <div id="primary_type_filter2" class="accordion-collapse collapse">
+                                <!--div class="dropdown bootstrap-select show-tick"--> <!--Field Organism-->
+                                    <select class="d-inline selectpicker" id="select_primary_type_filterset2" data-size="10"
+                                            data-live-search="true" data-actions-box="true"
+                                            name="select_primary_type_filterset2" multiple="true" tabindex="null">
+                                        {% if 'primary_type' in filters_fields2values_dict %}
+                                            {% for value in filters_fields2values_dict['primary_type'] %}
+                                                <option value="{{ value }}">{{ value }}</option>
+                                            {% endfor %}
+                                        {% endif %}
+                                    </select>
+                                <!--/div-->
+                            </div>
+                        </div>
+                        <div class="accordion-item">
+                            <div class="accordion-header">
+                                <span class="accordion-button collapsed text-break" data-bs-toggle="collapse"
+                                      data-bs-target="#secondary_type_filter2">
+                                    Secondary type
+                                    {% if 'secondary_type' in session['validatedfields_exp2obs_map'] %}
+                                        ({{session['validatedfields_exp2obs_map']['secondary_type']}})
+                                    {% endif %}
+                                </span>
+                            </div>
+                            <div id="secondary_type_filter2" class="accordion-collapse collapse"> <!--Field Type-->
+                                <!--div class="dropdown bootstrap-select show-tick"-->
+                                    <select class="d-inline selectpicker" id="select_secondary_type_filterset2" data-size="10"
+                                            data-live-search="true" data-container="body" data-live-search="true" data-actions-box="true"
+                                            name="select_serotypes_filterset2" multiple="true" tabindex="null">
+                                        {% if 'secondary_type' in filters_fields2values_dict %}
+                                            {% for value in filters_fields2values_dict['secondary_type'] %}
+                                                <option value="{{ value }}">{{ value }}</option>
+                                            {% endfor %}
+                                        {% endif %}
+                                    </select>
+                                <!--/div-->
+                            </div>
+                        </div>
+                        <div class="accordion-item">
+                            <div class="accordion-header">
+                                <span class="accordion-button collapsed text-break" data-bs-toggle="collapse"
+                                      data-bs-target="#genetic_profile_filter2">
+                                    Genetic profile
+                                    {% if 'genetic_profile' in session['validatedfields_exp2obs_map'] %}
+                                        ({{session['validatedfields_exp2obs_map']['genetic_profile']}})
+                                    {% endif %}
+                                </span>
+                            </div>
+                            <div id="genetic_profile_filter2" class="accordion-collapse collapse">
+                                <!--div class="dropdown bootstrap-select show-tick"-->
+                                    <select class="d-inline selectpicker" id="select_genetic_profile_filterset2"
+                                            data-size="10" data-actions-box="true"
+                                            name="select_genetic_profile_filterset2" multiple="true" tabindex="null"
+                                            data-live-search="true">
+                                        {% if 'genetic_profile' in filters_fields2values_dict %}
+                                            {% for value in filters_fields2values_dict['genetic_profile'] %}
+                                                <option value="{{ value }}">{{ value }}</option>
+                                            {% endfor %}
+                                        {% endif %}
+                                    </select>
+                                <!--/div-->
+                            </div>
+                        </div>
+                        <div class="accordion-item">
+                            <div class="accordion-header">
+                                <span class="accordion-button collapsed text-break" data-bs-toggle="collapse"
+                                      data-bs-target="#phenotypic_profile_filter2">
+                                    Phenotypic profile
+                                    {% if 'phenotypic_profile' in session['validatedfields_exp2obs_map'] %}
+                                        ({{session['validatedfields_exp2obs_map']['phenotypic_profile']}})
+                                    {% endif %}
+                                </span>
+                            </div>
+                            <div id="phenotypic_profile_filter2" class="accordion-collapse collapse"> <!--Field SISTR-->
+                                <!--div class="dropdown bootstrap-select show-tick"-->
+                                    <select class="d-inline selectpicker" id="select_phenotypic_profile_filterset2"
+                                            data-size="10" data-actions-box="true"
+                                            name="select_phenotypic_profile_filterset2" multiple="true" tabindex="null"
+                                            data-live-search="true">
+                                        {% if 'phenotypic_profile' in filters_fields2values_dict %}
+                                            {% for value in filters_fields2values_dict['phenotypic_profile'] %}
+                                                <option value="{{ value }}">{{ value }}</option>
+                                            {% endfor %}
+                                        {% endif %}
+                                    </select>
+                                <!--/div-->
+                            </div>
+                        </div>
+                        <div class="accordion-item">
+                            <div class="accordion-header">
+                                <span class="accordion-button collapsed text-break" data-bs-toggle="collapse"
+                                      data-bs-target="#date_range_filter2">Date range</span>
+                            </div>
+                            <div id="date_range_filter2" class="accordion-collapse collapse"> <!--Field IsolatDate-->
+                                <span>
+                                <label for="start_date_filterset2">Start:</label>
+                                <input type="date" id="start_date_filterset2" name="start_date_filterset2">
+                                <br/>
+                                <label for="end_date_filterset2">End  :</label>
+                                <input type="date" id="end_date_filterset2" name="end_date_filterset2">
+                                </span>
+                            </div>
+                        </div>
+                        <div class="accordion-item">
+                            <div class="accordion-header">
+                                <span class="accordion-button collapsed text-break" data-bs-toggle="collapse"
+                                      data-bs-target="#cluster_id_filter2">
+                                    Cluster ID
+                                    {% if 'cluster_id' in session['validatedfields_exp2obs_map'] %}
+                                        ({{session['validatedfields_exp2obs_map']['cluster_id']}})
+                                    {% endif %}
+                                </span>
+                            </div>
+                            <div id="cluster_id_filter2" class="accordion-collapse collapse">
+                                <!--Field IsolatDate-->
+                                <!--div class="dropdown bootstrap-select show-tick"-->
+                                    <select class="d-inline selectpicker" id="select_cluster_id_filterset2"
+                                            name="select_cluster_id_filterset2" multiple="true" data-actions-box="true"
+                                            data-width="auto" data-size="10" data-live-search="true"
+                                            data-container="body">
+                                        {% if 'cluster_id' in filters_fields2values_dict %}
+                                            {% for value in filters_fields2values_dict['cluster_id'] %}
+                                                <option value="{{ value }}">{{ value }}</option>
+                                            {% endfor %}
+                                        {% endif %}
+                                    </select>
+                                <!--/div-->
+                            </div>
+                        </div>
+                        <div class="accordion-item">
+                            <div class="accordion-header">
+                                <span class="accordion-button collapsed text-break" data-bs-toggle="collapse"
+                                      data-bs-target="#investigation_id_filter2">
+                                    Investigation ID
+                                    {% if 'investigation_id' in session['validatedfields_exp2obs_map'] %}
+                                        ({{session['validatedfields_exp2obs_map']['investigation_id']}})
+                                    {% endif %}
+                                </span>
+                            </div>
+                            <div id="investigation_id_filter2" class="accordion-collapse collapse">
+                                <!--Field IsolatDate-->
+                                <!--div class="dropdown bootstrap-select show-tick"-->
+                                    <select class="d-inline selectpicker" id="select_investigation_id_filterset2"
+                                            name="select_investigation_id_filterset2" multiple="true"
+                                            data-width="auto" data-size="10" data-live-search="true"
+                                            data-container="body" data-actions-box="true">
+                                        {% if 'investigation_id' in filters_fields2values_dict %}
+                                            {% for value in filters_fields2values_dict['investigation_id'] %}
+                                                <option value="{{ value }}">{{ value }}</option>
+                                            {% endfor %}
+                                        {% endif %}
+                                    </select>
+                                <!--/div-->
+                            </div>
+                        </div>
+                        <div class="accordion-item">
+                            <div class="accordion-header">
+                                    <span class="accordion-button collapsed text-break" data-bs-toggle="collapse"
+                                          data-bs-target="#genotype_hierarchy_groups_filter2">
+                                        Hierarchical subtypes
+                                        {% if 'hierarchical_subtype' in session['validatedfields_exp2obs_map'] %}
+                                            ({{session['validatedfields_exp2obs_map']['hierarchical_subtype']}})
+                                        {% endif %}
+                                    </span>
+                            </div>
+                            <div id="genotype_hierarchy_groups_filter2" class="accordion-collapse collapse">
+                                <!--Field IsolatDate-->
+                                <!--div class="dropdown bootstrap-select show-tick"-->
+                                {% for field_name, unique_values in  filters_fields2values_dict.items() %}
+                                    {% if 'hs_level_' in field_name %}
+                                        <div class="accordion-item">
+                                            <div class="accordion-header">
+                                                    <span class="accordion-button collapsed text-break" data-bs-toggle="collapse"
+                                                          data-bs-target="#{{ field_name }}_f2_accordion_item_content">
+                                                        {{ field_name }}
+                                                    </span>
+                                            </div>
+                                            <!--span class="fw-bold">{{ field_name }}</span-->
+                                            <div id="{{ field_name }}_f2_accordion_item_content" class="accordion-collapse collapse">
+                                                <select class="d-inline selectpicker"
+                                                        id="select_{{ field_name }}_genotype_hierarchy_groups_filterset2"
+                                                        name="select_{{ field_name }}_genotype_hierarchy_groups_filterset2"
+                                                        multiple="true" data-actions-box="true"
+                                                        data-width="auto" data-size="10" data-live-search="true"
+                                                        data-container="body">
+                                                    {% for value in unique_values %}
+                                                        <option value="{{ value }}">{{ value }}</option>
+                                                    {% endfor %}
+                                                </select>
+                                            </div>
+                                        </div>
+                                    {% endif %}
+                                {% endfor %}
+                                <!--/div-->
+                            </div>
+                        </div>
+                        <div class="accordion-item">
+                            <div class="accordion-header">
+                                    <span class="accordion-button collapsed text-break" data-bs-toggle="collapse"
+                                          data-bs-target="#sample_source_site_filter2">
+                                        Source site
+                                        {% if 'source_site' in session['validatedfields_exp2obs_map'] %}
+                                            ({{session['validatedfields_exp2obs_map']['source_site']}})
+                                        {% endif %}
+                                    </span>
+                            </div>
+                            <div id="sample_source_site_filter2" class="accordion-collapse collapse"> <!--Field source_type-->
+                                <!--div class="dropdown bootstrap-select show-tick"-->
+                                    <select class="d-inline selectpicker" id="select_source_site_filterset2"
+                                            data-live-search="true" data-actions-box="true"
+                                            name="select_source_site_filterset2" data-size="10" multiple="true"
+                                            tabindex="null">
+                                        {% if 'source_site' in filters_fields2values_dict %}
+                                            {% for value in filters_fields2values_dict['source_site'] %}
+                                                <option value="{{ value }}">{{ value }}</option>
+                                            {% endfor %}
+                                        {% endif %}
+                                    </select>
+                                <!--/div-->
+                            </div>
+                        </div>
+                        <div class="accordion-item">
+                            <div class="accordion-header">
+                                    <span class="accordion-button collapsed text-break" data-bs-toggle="collapse"
+                                          data-bs-target="#sample_source_type_filter2">
+                                        Source type
+                                        {% if 'source_type' in session['validatedfields_exp2obs_map'] %}
+                                            ({{session['validatedfields_exp2obs_map']['source_type']}})
+                                        {% endif %}
+                                    </span>
+                            </div>
+                            <div id="sample_source_type_filter2" class="accordion-collapse collapse"> <!--Field source_type-->
+                                <!--div class="dropdown bootstrap-select show-tick"-->
+                                    <select class="d-inline selectpicker" id="select_source_type_filterset2"
+                                            data-live-search="true" data-actions-box="true"
+                                            name="select_source_type_filterset2" data-size="10" multiple="true"
+                                            tabindex="null">
+                                        {% if 'source_type' in filters_fields2values_dict %}
+                                            {% for value in filters_fields2values_dict['source_type'] %}
+                                                <option value="{{ value }}">{{ value }}</option>
+                                            {% endfor %}
+                                        {% endif %}
+                                    </select>
+                                <!--/div-->
+                            </div>
+                        </div>
+                        <div class="accordion-item">
+                            <div class="accordion-header">
+                                    <span class="accordion-button collapsed text-break" data-bs-toggle="collapse"
+                                          data-bs-target="#geoloc_id_filter2">
+                                        Geolocation id
+                                        {% if 'geoloc_id' in session['validatedfields_exp2obs_map'] %}
+                                            ({{session['validatedfields_exp2obs_map']['geoloc_id']}})
+                                        {% endif %}
+                                    </span>
+                            </div>
+                            <div id="geoloc_id_filter2" class="accordion-collapse collapse">
+                                <!--Field source_type-->
+                                <!--div class="dropdown bootstrap-select show-tick"-->
+                                    <select class="d-inline selectpicker" id="select_geoloc_id_filterset2"
+                                            data-live-search="true" data-actions-box="true"
+                                            name="select_geoloc_id_filterset2" data-size="10" multiple="true"
+                                            tabindex="null">
+                                        {% if 'geoloc_id' in filters_fields2values_dict %}
+                                            {% for value in filters_fields2values_dict['geoloc_id'] %}
+                                                <option value="{{ value }}">{{ value }}</option>
+                                            {% endfor %}
+                                        {% endif %}
+                                    </select>
+                                <!--/div-->
+                            </div>
+                        </div>
+                    </div>
+
+                </div>
+
+            </div>
+
+            <hr style="padding: 1px;margin: 0.1em;">
+            <div class="text-left">
+                <span class="fw-bold">GROUP BY:</span>
+                <select class="selectpicker show-tick mb-1" id="groupby_selector" style="right: 0; left: auto;"
+                        name="groupby_selector" multiple="true"
+                        data-width="100%" data-size="5" data-live-search="true"  data-actions-box="false"
+                        title="Select a variable ..."
+                >
+                            <option data-hidden="true"></option>
+                    {% if df_column_names %}
+                        {% for item in df_column_names %}
+                            {% if item in session['validatedfields_exp2obs_map']%}
+                                <option value="{{ item }}">{{ item }} ({{session['validatedfields_exp2obs_map'][item]}})</option>
+                            {% else %}
+                                <option value="{{ item }}">{{ item }}</option>
+                            {% endif %}
+                        {% endfor %}
+                    {% endif %}
+                    <!--option value="">---DEACTIVATE GROP BY---</option-->
+                </select>
+
+            </div>
+
+
+            <hr style="padding: 1px;margin: 0em;">
+            <div class="form-check form-switch m-2">
+                <input id="percent_scale_toggle" onclick="postPlotData(this.id,false)" class="form-check-input" type="checkbox" role="switch" id="flexSwitchCheckDefault">
+                <label class="form-check-label" for="flexSwitchCheckDefault">Enable y-axis % scale</label>
+
+            </div>
+            <div class="form-check form-switch m-2">
+                <input id="log_scale_toggle" onclick="postPlotData(this.id,false)" class="form-check-input" type="checkbox" role="switch" id="flexSwitchCheckDefault" >
+                <label class="form-check-label" for="flexSwitchCheckDefault">Enable y-axis log scale</label>
+            </div>
+
+            <hr style="padding: 1px;margin: 0;">
+            <div style="text-align: center" id="upload_button_div">
+                <form style="text-align: center;margin-bottom: 1px;" id="upload_file_form" action="/" method="post" enctype="multipart/form-data">
+                    <input type='file' accept=".xlsx,.csv" onchange=startFileUpload() name='file' id='file_selector' hidden/>
+                    <button type="button" id="upload_data_button" onclick="openFileUploadDialog()" class="btn btn-danger m-1">UPLOAD</button>
+                    <button type="button" id="apply_filters_button" onclick="postPlotData()" class="btn btn-danger m-1">APPLY</button>
+                    <button type="button" id="reset_filters_button" onclick="resetAllFilters(this)" class="btn btn-danger m-1">RESET</button>
+                </form>
+
+            </div>
+
+            <hr style="padding: 1px;margin: 0;">
+
+            <div class="accordion-item" id="trace_names_colors" style="display:none;">
+                <div class="accordion-header">
+                    <!--p style="text-align: center;margin: 0em;">TRACE CONTROLS:</p-->
+                    <span class="accordion-button collapsed fw-bold" data-bs-toggle="collapse"
+                    data-bs-target="#plot_controls">PLOT CONTROLS</span>
+                </div>
+                <div id="plot_controls" class="accordion-collapse collapse show">
+                    <div id="trace_names_colors_list"></div>
+                    <hr style="padding: 1px;margin: 3px;">
+                    <div id="plot_title_controls">
+                        <select class="selectpicker show-tick mb-1" id="plot_title_selectpicker" style="right: 0; left: auto;"
+                                data-width="100%" data-size="5" data-live-search="true" data-actions-box="false"
+                                title="Select plot title to change ..."
+                        >
+                        </select>
+                        <input id="plot_title_input_field" type="text" name="0" value="" placeholder="Enter a new plot title" class="form-control mb-1"
+                               onchange="updatePlotAttr(this)" style="background-color: whitesmoke;">
+                    </div> <!--Plotly.relayout('plotDiv_sample_accum_plot', {'title':'TEST'})-->
+                    <hr style="padding: 1px;margin: 3px;">
+                    <select class="selectpicker show-tick mb-1" id="tab_title_selectpicker" style="right: 0; left: auto;"
+                            data-width="100%" data-size="5" data-live-search="true" data-actions-box="false"
+                            title="Select tab title to change ..."
+                    >
+                    <input id="tab_title_input_field" type="text"  value="" placeholder="Enter a new tab title" class="form-control mb-1"
+                               onchange="updateTabTitle(this.value)" style="background-color: whitesmoke;">
+                    <hr style="padding: 1px;margin: 3px;">
+                    <div id='sunburst_max_levels_panel' style="display: flex; flex-direction:row; justify-content: space-between; align-items: center">
+                    <label  for="sunburst_max_levels_slider"># of hierarchical levels to render:</label>
+                    <span style="font-weight:bold; padding: 0px 5px 0px 0px;" id="sunburst_max_levels_slider_current_value">3</span>
+                    </div>
+                    <input id="sunburst_max_levels_slider" style="width:100%" type="range" min="1" value="3" class="form-control-range"  step="1"
+                           onchange="updateSunburstVisibleLevels()" oninput="$('#sunburst_max_levels_slider_current_value').html($(this).val())"
+                    >
+
+                </div>
+            </div>
+
+
+
+            <div class="accordion-item">
+                <div class="accordion-header">
+                    <span class="accordion-button collapsed fw-bold" data-bs-toggle="collapse"
+                          data-bs-target="#settings_selected">SETTINGS APPLIED</span>
+                </div>
+                <div id="settings_selected" class="accordion-collapse collapse">
+                    <div class="settings_selected_grid" style="display:grid; max-width: 100%; grid-template-columns: auto; grid-auto-columns: min-content;">
+                        <span>Session ID:</span><span>{{session_id}}</span>
+                        <span>Filename:</span><span>{{file_uploaded}}</span>
+                        <span>Dashboard version:</span><span>0.0.5</span>
+                        <span>Filters group #1:</span><span id="settings_selected_group1">-</span>
+                        <span>Filters group #2:</span><span id="settings_selected_group2">-</span>
+                        <span>Group by variable:</span><span id="settings_selected_groupby">-</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="accordion-item">
+                <div class="accordion-header">
+                        <span class="accordion-button collapsed fw-bold" data-bs-toggle="collapse"
+                              data-bs-target="#export_data_options">EXPORT DATA</span>
+                </div>
+                <div id="export_data_options" class="accordion-collapse collapse mb-1 text-center">
+                    <button type="button" id="save_plots_2_button" onclick="saveweb2html()" class="btn btn-primary m-1">HTML
+                    </button>
+                    <button type="button" id="save_plots_2_pdf_button" onclick="saveweb2pdf()" class="btn btn-primary m-1">
+                        PDF
+                    </button>
+                    <button type="button" id="save_plots_2_csv_button" onclick="postPlotData(null,true)" class="btn btn-primary m-1">CSV</button>
+                </div>
+            </div>
+        </div>
+
+        
+
+    </div>
+    <div id="content">
+        <div id="load_spinner_div" class="position-relative w-100 h-100 d-flex flex-column align-items-center bg-white justify-content-center">
+            <div class="spinner-border text-primary"  role="status"></div>
+            <span class="text-primary">Loading data or rendering plots. Please wait ...</span>
+
+            <label class="text-primary progressUploadBar" for="progressUploadBar" style="display: none">File upload progress</label>
+            <progress class="progressUploadBar" value="0" max="100" style="width:80%;display: none"></progress>
+
+        </div>
+
+        {% if method == "GET" %}
+        <div id="info_message_file_upload_request" class="position-relative w-100 h-100 d-flex flex-column align-items-center bg-white justify-content-center">
+            <a href="javascript:void(0)" onclick="openFileUploadDialog()">UPLOAD DATA TO RENDER (xlsx or csv)</a>
+            <a href="{{ url_for('static',filename='ecoli_sample_data.csv') }}">Download a demo E.coli dataset</a>
+        </div>
+        {% endif %}
+
+        {% if not render_splash_screen %}
+        <div class="plottabs d-none">
+            <div class="buttons">
+            </div>
+        </div>
+        {% endif %}
+
+    </div>
+
+</div>
+<div class="footer border-top">
+    &copy; Copyright 2021. <a href="https://www.nml-lnm.gc.ca/">Canada's National Microbiology Laboratory</a>
+</div>
+
+
+<!--Script to handle click events in the Plotly graphs-->
+<script type="text/javascript" id="renderplots">
+    console.log('START of script on every page load, method: {{ method }}');
+    $(document).ready(function(){$('[data-bs-toggle="tooltip"]').tooltip(); })
+
+    document.getElementById("load_spinner_div").classList.add("d-none"); //remove spinner when page is loaded. This helps when rendering heavy large plots
+
+    //resize plots on windows resize        
+    window.addEventListener('resize', resizePlots);
+
+    {% if method == "POST" and render_splash_screen == False %}
+        renderplots({{plots | safe}});
+    {% endif %}
+
+    //always render trace control upon page every load
+    $(document).ready( function () {
+                renderTraceControls();
+                updatePlotTitlesSection();
+                updateTabTitlesSection();
+                updateSunburstMaxLevels()
+    });
+
+    $("#plot_title_selectpicker").change(function(){
+            document.getElementById("plot_title_input_field").value = $("#plot_title_selectpicker option:selected")[0].textContent
+    })
+
+        
+    $("#tab_title_selectpicker").change(function(){
+        document.getElementById("tab_title_input_field").value = $("#tab_title_selectpicker option:selected")[0].textContent
+    })
+
+    function update_validate_table_row(selected_observed_value, expected_value, tr_html){
+        let validation_table_metadata = {};
+        {%if metadata%}
+            validation_table_metadata = {{ metadata | safe }};
+        {% endif %}
+        if (validation_table_metadata === {}){
+            console.log("ERROR: validation_table_metadata not provided!")
+            return 1
+        }
+        console.log(selected_observed_value,expected_value)
+        console.log(validation_table_metadata)
+        let header2index_map={};
+        document.querySelectorAll('.input_variables_table tr')[0].querySelectorAll('th').forEach(function(element,index){
+            header2index_map[String(element.textContent)]=index;
+        })
+
+        if(expected_value ==='sample_id' &&
+            validation_table_metadata['fields_counts_observed'][selected_observed_value] !== validation_table_metadata['fields_counts_unique_observed'][selected_observed_value]){
+            validation_table_metadata['warnings'][selected_observed_value]='Found duplicate values. Sample identifiers should be unique.'
+        }
+
+        tr_html.getElementsByTagName('td')[header2index_map['Total values']].textContent=validation_table_metadata['fields_counts_observed'][selected_observed_value]
+        tr_html.getElementsByTagName('td')[header2index_map['Unique values']].textContent=validation_table_metadata['fields_counts_unique_observed'][selected_observed_value]
+        tr_html.getElementsByTagName('td')[header2index_map['Missing values']].textContent=validation_table_metadata['fields_counts_missing_observed'][selected_observed_value]
+        tr_html.getElementsByTagName('td')[header2index_map['Warnings']].textContent=validation_table_metadata['warnings'][selected_observed_value]
+    } 
+</script>
+
+</body>
+</html>
