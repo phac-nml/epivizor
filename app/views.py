@@ -1893,23 +1893,27 @@ def uploadvalidatedata(file, extension):
     elif extension == "csv":
         df = pd.read_csv(file)
     else:
-        raise ValueError("Unknown input file extension")
+        raise ValueError("Unknown input file extension. Only xlsx and csv supported")
     end_time = time.time()
 
-    print("data loading time {}s".format(end_time-start_time) )
+    print("Input data loading time {}s".format(end_time-start_time) )
+    if df.columns.duplicated().any():
+        dupl_col_names = ",".join(df.columns[df.columns.duplicated()].to_list())
+        print(f"Duplicated columns found! Duplicated column(s) name(s): {dupl_col_names}")
+        df=df.loc[:,df.columns.duplicated()==False].copy()
+
 
     cache.delete('df_dashboard') #delete previous data
     cache.add('df_dashboard', df, timeout=0)
 
     metadata_dict['data_shape'] = df.shape
-    metadata_dict['fields_observed'] = df.columns.sort_values().to_list() + ['']
-    metadata_dict['fields_counts_observed'] = dict(zip(df.columns.sort_values().to_list(),
+    metadata_dict['fields_observed'] = df.columns.sort_values().to_list() #+ ['']
+    metadata_dict['fields_counts_observed'] = dict(zip(metadata_dict['fields_observed'],
                                                        [df[field].count() for field in
-                                                        df.columns.sort_values().to_list()]))
-
+                                                        metadata_dict['fields_observed']]))
+    
     metadata_dict['fields_counts_unique_observed'] = dict(zip(df.columns.sort_values().to_list(),
-                                                              [df[field].unique().size for field in
-                                                               metadata_dict['fields_counts_observed']]))
+                                                              [df[field].unique().size for field in metadata_dict['fields_counts_observed'].keys()]))
     metadata_dict['fields_counts_missing_observed'] = dict(zip(df.columns.sort_values().to_list(),
                                                                [metadata_dict['data_shape'][0] -
                                                                 metadata_dict['fields_counts_observed'][field]
