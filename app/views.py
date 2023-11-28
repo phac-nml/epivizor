@@ -114,7 +114,7 @@ def getFilteredData(filter_dict, df):
     Return: 
         df {pandas dataframe} - resulting filtered dataframe according to the supplied filters
     '''
-    print("getFilteredData()")
+    print(f"getFilteredData() and {','.join(df.columns.to_list())}")
     
     #convert values to REGEX safe equivalents such as 'B\\.1\\.1\\.7 instead of B.1.1.7 where dot is everything
     regex_characters=['\.','\+','\*','\?','\^','\$','\(','\)','\[','\]','\|','\{','\}']
@@ -127,15 +127,17 @@ def getFilteredData(filter_dict, df):
                     filter_dict[variable] = re.sub(character,'\\'+character,filter_dict[variable])
     hs_idx_final=[]
     for selected_hs_filter in [key for key in filter_dict if 'hs_level' in key]:
-        print("Hierarchical subtype filter for the sunburst plot is being applied", df.shape)
-        print(filter_dict[selected_hs_filter])
-        idx_bool = ( df.loc[:,selected_hs_filter].str.fullmatch('|'.join(filter_dict[selected_hs_filter])) ).to_list()
+        print("Hierarchical subtype filter for the sunburst plot is being applied on", df.shape)
+        regex = '|'.join(filter_dict[selected_hs_filter])
+        idx_bool = (df.loc[:,selected_hs_filter].str.fullmatch(regex) ).to_list()
         if not hs_idx_final:
             hs_idx_final = idx_bool
         else:
             hs_idx_final = [any(tup) for  tup in zip(idx_bool,hs_idx_final)]
+          
     if hs_idx_final:
-        df = df.loc[hs_idx_final].copy()
+        df = df.loc[hs_idx_final,:].copy()
+        print(f"After hierarchical cluster code filter left {df.shape[0]} rows")   
 
     #The expected variables filters
     if filter_dict['primary_type']:
@@ -701,8 +703,6 @@ def renderSunburstPlot(df,jsonPlotsDict):
 
     """
     if 'hs_level_0' in df.columns:
-            print("Rendering hierarchical subtype sunburst plot")
-            
             hier_column_names = [c for c in df.columns if 'hs_level_' in c]
             hier_num_of_levels = len(hier_column_names)
 
@@ -716,7 +716,7 @@ def renderSunburstPlot(df,jsonPlotsDict):
                 df_filtered = df[is_na_idx].value_counts(hier_column_names).reset_index(name="counts").sort_values(['counts'],ascending=False)
 
                 if df_filtered.empty:
-                    msg='Empty dataframe after non-defined entries filtering. Check data.'
+                    msg='Empty dataframe after filtering of missing data samples. Check data completeness.'
                     print(msg)
                     flash(msg)
                     jsonPlotsDict['figures']['hierarchy_of_clusters_sunburst_chart'] = '{}'
@@ -728,7 +728,7 @@ def renderSunburstPlot(df,jsonPlotsDict):
                     display_nrows = df_filtered.shape[0]
 
 
-
+                print(f"Started rendering hierarchical subtype sunburst plot on {df_filtered.shape[0]} samples")
                 plot_title ="Hierarchical subtype sunburst plot ({})".format(session['validatedfields_exp2obs_map']['hierarchical_subtype'])
                 fig = px.sunburst(
                     data_frame=df_filtered.head(display_nrows),
@@ -739,6 +739,7 @@ def renderSunburstPlot(df,jsonPlotsDict):
                     title=plot_title,
                     height=800
                 )
+                
                 #adding custom data to sunburst plot figure object using a pandas dataframe. This data will be displayed upon mouseover event
                 customdata = pd.DataFrame(fig["data"][0]["customdata"])
                 customdata[1] = [len(i.split("/"))-1 for i in fig["data"][0]["ids"]]
@@ -1895,12 +1896,16 @@ def uploadvalidatedata(file, extension):
     else:
         raise ValueError("Unknown input file extension. Only xlsx and csv supported")
     end_time = time.time()
-
     print("Input data loading time {}s".format(end_time-start_time) )
+    print("Cleaning from duplicated entries ")
     if df.columns.duplicated().any():
         dupl_col_names = ",".join(df.columns[df.columns.duplicated()].to_list())
         print(f"Duplicated columns found! Duplicated column(s) name(s): {dupl_col_names}")
         df=df.loc[:,df.columns.duplicated()==False].copy()
+    
+    print("Empty rows cleaning")
+    df=df[df.iloc[:,0].isna()==False].copy()
+    print(f"Total valid data rows in input {df.shape[0]}")
 
 
     cache.delete('df_dashboard') #delete previous data
