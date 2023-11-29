@@ -6,6 +6,7 @@
 <script src="{{ url_for('static',filename='js/popper.min.js') }}"></script>
 <script src="{{ url_for('static',filename='js/bootstrap.min.js') }}"></script>
 <script src="{{ url_for('static',filename='js/bootstrap-select.min.js') }}"></script>
+<script src="{{ url_for('static',filename='js/sweetalert2@11.js') }}"></script> 
 <link rel="stylesheet" href="{{ url_for('static',filename='css/bootstrap-select.min.css') }}">
 <link rel="stylesheet" href="{{ url_for('static',filename='css/style.css') }}">
 <script src="{{ url_for('static',filename='js/epivizor.js') }}"></script>
@@ -24,8 +25,17 @@
 {% with messages = get_flashed_messages() %}
   {% if messages and render_splash_screen == False %}
     <script>
-        var concat_messages="{{ messages|join(";") }}";
-        alert(concat_messages.replaceAll(';','\n'));
+        let msg = "<div class='text-start'><ul>" + 
+                  {% for m in messages %}
+                   "<li>{{ m }}</li>"+
+                  {% endfor %}
+                   "</ul></div>"
+        console.log(msg)           
+        Swal.fire({
+            icon: "info",
+            title: "Missing plots",
+            html: msg        
+            });
     </script>
   {% endif %}
 {% endwith %}
@@ -866,9 +876,9 @@
     </div>
 
 </div>
-<div class="footer border-top">
+<footer class="footer border-top">
     &copy; Copyright 2021. <a href="https://www.nml-lnm.gc.ca/">Canada's National Microbiology Laboratory</a>
-</div>
+</footer>
 
 
 <!--Script to handle click events in the Plotly graphs-->

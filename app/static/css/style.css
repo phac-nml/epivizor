@@ -14,9 +14,10 @@ body{
 }
 .flex-container{
   width: 100%;
-  min-height: 300px;
+  min-height: 97vh;
   display: flex;
   z-index:0;
+
 }
 #content {
   width: 80% ;
@@ -49,9 +50,9 @@ body{
 }
 
 .footer{
-  /*background-color:blue;*/
-  /*width:100%;*/
+  width:100%;
   text-align:center;
+  height: 3vh; 
 }
 
 #overlay {
