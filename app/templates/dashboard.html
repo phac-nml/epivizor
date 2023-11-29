@@ -95,9 +95,10 @@
                     <select class="form-select" onchange=update_validate_table_row(this.value,"{{field_exp}}",document.getElementById("{{ field_exp }}"))
                     {% if field_exp in metadata['fields_observed'] %}
                         disabled>
-                        <option selected">{{field_exp}}</option>
+                        <option></option>
+                        <option selected>{{field_exp}}</option>
                     {% else %}
-                        >
+                               >
                         <option selected>{{metadata['fields_observed'].last}}</option>
                     {% endif %}
                         

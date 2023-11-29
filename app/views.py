@@ -705,7 +705,7 @@ def renderSunburstPlot(df,jsonPlotsDict):
     if 'hs_level_0' in df.columns:
             hier_column_names = [c for c in df.columns if 'hs_level_' in c]
             hier_num_of_levels = len(hier_column_names)
-
+            print(hier_num_of_levels)
             if hier_num_of_levels == 1:
                 print('Hierarchical subtype sunburst plot: Only a single hierarchical level was found! Check delimiter and input data');
                 flash('Hierarchical subtype sunburst plot: Only a single hierarchical level was found! Check delimiter and input data');
