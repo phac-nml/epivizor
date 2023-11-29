@@ -23,7 +23,6 @@ body{
   width: 80% ;
   padding-left:  5px;
   padding-right: 5px;
-  /*border-style: solid;*/
   z-index: 0;
 }
 #content p{
@@ -153,9 +152,7 @@ table.input_variables_table tr:hover {background-color: #ddd;}
     font-weight: bold;
 }
 
-.buttons{
-    display: flex;
-}
+
 
 /* Style tab links */
 .tablink {
@@ -180,6 +177,7 @@ table.input_variables_table tr:hover {background-color: #ddd;}
 .tabcontent {
     color: black;
     display: none;
+    height: 100%;
     border: none;
     border-left: solid 2px lightgrey;
     border-bottom: solid 2px lightgrey;
@@ -202,4 +200,8 @@ table.input_variables_table tr:hover {background-color: #ddd;}
 }
 #lock_button:active {
     transform: scale(0.90);
+}
+
+.plottabs{
+    height: 100%;
 }
