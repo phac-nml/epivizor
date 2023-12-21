@@ -378,19 +378,37 @@ def dashboard():
         metadata_dict = uploadvalidatedata(request.files['file'], extension)
         session['filename'] = secure_filename(request.files['file'].filename)
         print("rendering splash screen after file upload to the server ...")
-        return render_template(
-            'dashboard.html',
-            title='Dashboard',
-            description='Dashboard for PulseNet and FoodNet Canada data visual analytics',
-            render_splash_screen=True,
-            metadata=metadata_dict,
-            method=request.method,
-            plots={},
-            session_id=session['id'],
-            file_uploaded=session['filename'],
-            filters_fields2values_dict={}
 
-        )
+        if metadata_dict:      
+            return render_template(
+                    'dashboard.html',
+                    title='Dashboard',
+                    description='Dashboard for PulseNet and FoodNet Canada data visual analytics',
+                    render_splash_screen = True,
+                    metadata=metadata_dict,
+                    method=request.method,
+                    plots={},
+                    session_id=session['id'],
+                    file_uploaded=session['filename'],
+                    filters_fields2values_dict={}
+
+            )
+        else:
+            return render_template(
+                    'dashboard.html',
+                    title='Dashboard',
+                    description='Dashboard for PulseNet and FoodNet Canada data visual analytics',
+                    render_splash_screen = False,
+                    metadata=metadata_dict,
+                    method=request.method,
+                    plots={},
+                    session_id=session['id'],
+                    file_uploaded=session['filename'],
+                    filters_fields2values_dict={}
+
+            )
+        
+
     if request.method == 'POST' and isinstance(cache.get('df_dashboard'), type(pd.DataFrame())) == False: #if session expired
         print(cache.get('df_dashboard'), type(cache.get('df_dashboard')))
         print(isinstance(cache.get('df_dashboard'), type(pd.DataFrame)))
@@ -1887,21 +1905,27 @@ def uploadvalidatedata(file, extension):
     metadata_dict = {}
 
     start_time = time.time()
+    #both cases allow for duplicated columns (no automatic renaming)
     if extension == "xlsx":
         data = load_workbook(file, read_only=True, data_only=True).active.values
         cols = next(data)
-        df = pd.DataFrame(data, columns=cols) #Time elapsed 0:02:09.196388
+        df = pd.DataFrame(data, columns=cols) 
     elif extension == "csv":
-        df = pd.read_csv(file)
+        df = pd.read_csv(file, header = None, skiprows = 1)
+        file.seek(0)
+        rownames  =  pd.read_csv(file, header = None, nrows = 1).loc[0,:].to_list()
+        df.columns = rownames
     else:
         raise ValueError("Unknown input file extension. Only xlsx and csv supported")
     end_time = time.time()
     print("Input data loading time {}s".format(end_time-start_time) )
-    print("Cleaning from duplicated entries ")
+    print("Checkin data on duplicated entries ... ")
     if df.columns.duplicated().any():
         dupl_col_names = ",".join(df.columns[df.columns.duplicated()].to_list())
         print(f"Duplicated columns found! Duplicated column(s) name(s): {dupl_col_names}")
-        df=df.loc[:,df.columns.duplicated()==False].copy()
+        flash(f"Duplicated column(s) found ({dupl_col_names}) in file {file.filename}! Aborting upload. Make sure input has unique header names")
+        return {}
+    #    df=df.loc[:,df.columns.duplicated()==False].copy()
     
     print("Empty rows cleaning")
     df=df[df.iloc[:,0].isna()==False].copy()
@@ -1912,7 +1936,7 @@ def uploadvalidatedata(file, extension):
     cache.add('df_dashboard', df, timeout=0)
 
     metadata_dict['data_shape'] = df.shape
-    metadata_dict['fields_observed'] = df.columns.sort_values().to_list() #+ ['']
+    metadata_dict['fields_observed'] = df.columns.sort_values().unique().to_list() #+ ['']
     metadata_dict['fields_counts_observed'] = dict(zip(metadata_dict['fields_observed'],
                                                        [df[field].count() for field in
                                                         metadata_dict['fields_observed']]))

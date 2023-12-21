@@ -33,9 +33,10 @@
         console.log(msg)           
         Swal.fire({
             icon: "info",
-            title: "Missing plots",
+            title: "Info",
             html: msg        
             });
+        //document.getElementById('info_message_file_upload_request').classList.remove('d-none');  
     </script>
   {% endif %}
 {% endwith %}
@@ -754,12 +755,12 @@
             <hr style="padding: 1px;margin: 0em;">
             <div class="form-check form-switch m-2">
                 <input id="percent_scale_toggle" onclick="postPlotData(this.id,false)" class="form-check-input" type="checkbox" role="switch" id="flexSwitchCheckDefault">
-                <label class="form-check-label" for="flexSwitchCheckDefault">Enable y-axis % scale</label>
+                <label class="form-check-label" for="percent_scale_toggle">Enable y-axis % scale</label>
 
             </div>
             <div class="form-check form-switch m-2">
                 <input id="log_scale_toggle" onclick="postPlotData(this.id,false)" class="form-check-input" type="checkbox" role="switch" id="flexSwitchCheckDefault" >
-                <label class="form-check-label" for="flexSwitchCheckDefault">Enable y-axis log scale</label>
+                <label class="form-check-label" for="log_scale_toggle">Enable y-axis log scale</label>
             </div>
 
             <hr style="padding: 1px;margin: 0;">
@@ -856,11 +857,11 @@
             <span class="text-primary">Loading data or rendering plots. Please wait ...</span>
 
             <label class="text-primary progressUploadBar" for="progressUploadBar" style="display: none">File upload progress</label>
-            <progress class="progressUploadBar" value="0" max="100" style="width:80%;display: none"></progress>
+            <progress class="progressUploadBar" id="progressUploadBar" value="0" max="100" style="width:80%;display: none"></progress>
 
         </div>
 
-        {% if method == "GET" %}
+        {% if method == "GET" or get_flashed_messages()|length != 0 %}
         <div id="info_message_file_upload_request" class="position-relative w-100 h-100 d-flex flex-column align-items-center bg-white justify-content-center">
             <a href="javascript:void(0)" onclick="openFileUploadDialog()">UPLOAD DATA TO RENDER (xlsx or csv)</a>
             <a href="{{ url_for('static',filename='ecoli_sample_data.csv') }}">Download a demo E.coli dataset</a>

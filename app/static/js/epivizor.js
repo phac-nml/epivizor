@@ -728,7 +728,6 @@ function startFileUpload(){
 
             },
             success : function(data){
-                //console.log(data);
                 document.open();
                 document.write(data);
                 document.close();
