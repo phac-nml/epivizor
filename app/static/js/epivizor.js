@@ -2,7 +2,7 @@
      * Opens the file upload dialog box by clicking on a hidden file selector button `Choose File` of the <input> with the 'file_selector' id
      * Also removes the the file upload info message 'UPLOAD DATA TO RENDER (xlsx or csv)'
      */
- function openFileUploadDialog() {
+function openFileUploadDialog() {
     document.getElementById('file_selector').click();
 }
 
@@ -11,15 +11,14 @@
  * @param {Object} event -  XMLHttpRequest progress event triggered when data is received by the server
  */
 function progressHandler(event) {
-    //console.log(event)
     var percent = (event.loaded / event.total) * 100;
     $(".progressUploadBar")[1].value= Math.round(percent);
-
 }
+
 
 /**
  * Updates the plot title customize dropdown of the PLOT CONTROLS section by iterating over the rendered plots objects
- * and populationing the dropdown plot titles
+ * and population the dropdown plot titles
  */
 function updatePlotTitlesSection() {
     console.log('Running updatePlotTitlesSection() to update plot titles selector')
@@ -184,13 +183,11 @@ function resetAllFilters(){
         for (let i = 0; i < select_tags2.length; i++) {
             $('#' + select_tags2[i].id).selectpicker('val', null);
         }
-
     }
     $("#date_range_filter2").find("input")[0].value=''; $("#date_range_filter2").find("input")[1].value=''
     //reset groupby filter
     if (groupby_values_array.length > 0){
         $('#groupby_selector').selectpicker('val',null);
-
     }
     $('#percent_scale_toggle')[0].checked=false; $('#log_scale_toggle')[0].checked=false;
 
@@ -234,7 +231,6 @@ function updatePlotAttr(obj){
             }else{
                 console.log("uknown input type "+obj.type+" (expected text or color). not graph updates")
             }
-
         }
     })
 }
@@ -344,8 +340,8 @@ function submitValidatedFields(){
 
     console.log(form);
     form.submit(); //regular submit
-
 }
+
 /**
  * Clear session information when switching from the dashboard to custom plot build view or viceversa
  * This prevents unexpected behaviour and allows user to start again from scratch in each view mode
@@ -576,8 +572,9 @@ function resizePlots(){
     console.log('resizing plots due to window change')
     let plots = document.getElementsByClassName('plotly');
     let plot_max_width = document.getElementById('content').clientWidth-50;
+    let plot_max_height = document.getElementById('navbar').clientHeight-50;
     for(let i=0; i<plots.length; i++){
-        Plotly.relayout(plots[i].parentElement.id,{width: plot_max_width})
+        Plotly.relayout(plots[i].parentElement.id,{width: plot_max_width, height: plot_max_height})
     }
 }
 
@@ -596,11 +593,11 @@ function renderplots(graphsMap){
     'clusterid_codes_distribution_chart','investigationid_codes_distribution_chart'];
 
     console.log(graphsMap);
-    let is_info_uoload_message_exists = document.querySelector('#info_message_file_upload_request')
-    if (is_info_uoload_message_exists !== null){
-        is_info_uoload_message_exists.remove()
+    let is_info_upload_message_exists = document.querySelector('#info_message_file_upload_request')
+    if (is_info_upload_message_exists !== null){
+        is_info_upload_message_exists.remove()
     }
-    is_info_uoload_message_exists 
+    
 
     if (Object.keys(graphsMap).length !== 0) {
         var nodeTabButtons = document.querySelector(".plottabs .buttons");
@@ -652,7 +649,6 @@ function renderplots(graphsMap){
                 tab.style.width = String(100 / tabsDOM.length) + "%"
             });
             document.getElementsByClassName("plottabs")[0].classList.remove("d-none");
-
             document.querySelector(".plottabs .buttons .tablink").click(); //click on the first one
             resizePlots();
         }
@@ -711,9 +707,17 @@ function tabsPlotsControl(tabName,elmnt) {
 function startFileUpload(){
         console.log('startFileUpload()')
         $('#content [id^="plotDiv"]').hide()
-        $('.plottabs').hide()
         $("#load_spinner_div").removeClass("d-none"); //show load spinner upon submission of the upload
-        var processUploadBar = $(".progressUploadBar")
+        let is_plottabs_present = document.querySelector('.plottabs')
+        if (is_plottabs_present !== null){
+            is_plottabs_present.remove()
+        }
+        let is_info_upload_message_exists = document.querySelector('#info_message_file_upload_request')
+        if (is_info_upload_message_exists !== null){
+            is_info_upload_message_exists.remove()
+        }
+      
+        let processUploadBar = $(".progressUploadBar")
         $.ajax({
             xhr: function() {
                 var xhr = new XMLHttpRequest();
