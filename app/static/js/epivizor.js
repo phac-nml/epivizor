@@ -60,7 +60,6 @@ function updateTabTitle(newTitle){
     Array.from(document.getElementsByClassName('tablink')).forEach((tabElement) =>{
             if(tabElement.name === indexTabNameField){tabElement.textContent=newTitle}
         }
-
     )
 }
 
@@ -597,6 +596,12 @@ function renderplots(graphsMap){
     'clusterid_codes_distribution_chart','investigationid_codes_distribution_chart'];
 
     console.log(graphsMap);
+    let is_info_uoload_message_exists = document.querySelector('#info_message_file_upload_request')
+    if (is_info_uoload_message_exists !== null){
+        is_info_uoload_message_exists.remove()
+    }
+    is_info_uoload_message_exists 
+
     if (Object.keys(graphsMap).length !== 0) {
         var nodeTabButtons = document.querySelector(".plottabs .buttons");
         var nodeTabButtonsCount = document.querySelectorAll(".plottabs .buttons button").length;

@@ -855,10 +855,8 @@
         <div id="load_spinner_div" class="position-relative w-100 h-100 d-flex flex-column align-items-center bg-white justify-content-center">
             <div class="spinner-border text-primary"  role="status"></div>
             <span class="text-primary">Loading data or rendering plots. Please wait ...</span>
-
             <label class="text-primary progressUploadBar" for="progressUploadBar" style="display: none">File upload progress</label>
             <progress class="progressUploadBar" id="progressUploadBar" value="0" max="100" style="width:80%;display: none"></progress>
-
         </div>
 
         {% if method == "GET" or get_flashed_messages()|length != 0 %}

@@ -41,7 +41,7 @@ def getPlotVariablesDict(form_dict):
         plotsMetaDataDict[plotn] = {}
         plotsMetaDataDict[plotn]['plottype'] = form_dict['plottype_p' + plotn]
         plotsMetaDataDict[plotn]['variables'] = list()
-        print([form_dict[k] for k in form_dict.keys() if re.match(r'variable\d+_p' + plotn, k)])
+        #print([form_dict[k] for k in form_dict.keys() if re.match(r'variable\d+_p' + plotn, k)])
         plotsMetaDataDict[plotn]['variables'] = [form_dict[k] for k in form_dict.keys() if
                                                  re.match(r'variable\d+_p' + plotn, k)]
 
@@ -163,12 +163,12 @@ def getFilteredData(filter_dict, df):
     if 'date' in df.columns:
         df.loc[:,'date']=pd.to_datetime(df['date'],errors='coerce')
         if filter_dict['start_date'] and filter_dict['end_date']:
-            df.query(filter_dict['start_date'] + "< date <" + filter_dict['end_date'],inplace=True)
-
+            print("date >= " + filter_dict['start_date'] + " and date <= " + filter_dict['end_date'])
+            df.query("date >= " + filter_dict['start_date'] + " and date <= " + filter_dict['end_date'], inplace=True)
         elif filter_dict['start_date'] and filter_dict['end_date'] is None:
-            df.query(filter_dict['start_date'] + "< date",inplace=True)
+            df.query("date >= " + filter_dict['start_date'], inplace=True)
         elif filter_dict['start_date'] is None and filter_dict['end_date']:
-            df.query("date <" + filter_dict['end_date'],inplace=True)
+            df.query("date <= " + filter_dict['end_date'], inplace=True)
     else:
         print('WARNING: the date field "date" not mapped or available so date filtering (if selected) was not applied!')
         
@@ -192,8 +192,6 @@ def renderPlotsFromDict(metadata, form_dict, df):
     """
     jsonPlotsDict = {}
     error_msg = ''
-
-    
 
     for nplot in sorted(metadata.keys()):
         print(nplot)
@@ -1029,11 +1027,10 @@ def renderHistPlot(df, df_col_name, form_data_dict, jsonPlotsDict, jsonPlotsDict
         df2 (pandas dataframe, optional): A copy of the Group #2 pandas dataframe representing the second dataset to create traces on
         layout_dict (dict, optional): A dictionary of with Plotly Layout directives such as forcing vertical x-axis tick labels {'xaxis.tickangle':90}. Defaults to {}.
     """
-    print("renderHistPlot {}: df2 shape: {}".format(df_col_name, df2.shape))
+    print("renderHistPlot '{}': df1 shape {}; df2 shape: {}".format(df_col_name, df.shape, df2.shape))
     if df_col_name in df.columns.to_list() and df2.empty is True:
         print("{} abundances barplot being rendered ...".format(df_col_name))
-        print(df.shape)
-    
+
         if any(not element for element in df[df_col_name].isna()):
             # standardize the filed names in case they are long or have non-informative information (e.g. empty antigenic formula)
             df.loc[df[df_col_name] == 0, df_col_name] = 'unknown'
