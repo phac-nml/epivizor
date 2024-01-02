@@ -6,6 +6,17 @@ function openFileUploadDialog() {
     document.getElementById('file_selector').click();
 }
 
+function hideNavItemsNotSelected(){
+    console.log('hideNavItemsNotSelected()')
+    document.querySelectorAll('[id^="accordion_section_filters_subset"] .accordion-item').forEach(
+        (item) => {
+            if(/notselected/.test(item.innerText) === true ){
+                item.classList.add('d-none')
+            }  
+        }
+        );
+    
+}
 /**
  * Updates file upload progress bar with the current upload value reported as a percentage for total
  * @param {Object} event -  XMLHttpRequest progress event triggered when data is received by the server
@@ -572,7 +583,7 @@ function resizePlots(){
     console.log('resizing plots due to window change')
     let plots = document.getElementsByClassName('plotly');
     let plot_max_width = document.getElementById('content').clientWidth-50;
-    let plot_max_height = document.getElementById('navbar').clientHeight-50;
+    let plot_max_height = document.getElementById('navbar').clientHeight;
     for(let i=0; i<plots.length; i++){
         Plotly.relayout(plots[i].parentElement.id,{width: plot_max_width, height: plot_max_height})
     }
@@ -651,6 +662,8 @@ function renderplots(graphsMap){
             document.getElementsByClassName("plottabs")[0].classList.remove("d-none");
             document.querySelector(".plottabs .buttons .tablink").click(); //click on the first one
             resizePlots();
+            hideNavItemsNotSelected();
+            
         }
     }
 

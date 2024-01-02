@@ -427,12 +427,10 @@ def dashboard():
     # process POST request
     if request.method == 'POST' and (isinstance(cache.get('df_dashboard'), type(pd.DataFrame())) == True
                                      or request.form.to_dict() != {}) and cache.get("df_dashboard").empty == False:  # and session['filename'] == "NA"
-        
         df = cache.get("df_dashboard")
         df2 = pd.DataFrame() #to hold second filtered subset data if filters applied
         print("Method POST:", isinstance(df, pd.DataFrame))
-        
-
+    
         ## RENAME DATAFRAME FIELDS ACCORDING 2 VALIDATION SCREEN MAPPINGS
         print("form_data_dict: {}".format(form_data_dict))
         if 'delimiter_symbol' in form_data_dict:

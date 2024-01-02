@@ -250,7 +250,12 @@
                         <div class="accordion-item">
                             <div class="accordion-header">
                                 <span class="accordion-button collapsed text-break" data-bs-toggle="collapse"
-                                      data-bs-target="#date_range_filter1">Date range</span>
+                                      data-bs-target="#date_range_filter1">
+                                      Date range 
+                                      {% if 'date' in session['validatedfields_exp2obs_map'] %}
+                                      ({{session['validatedfields_exp2obs_map']['date']}})
+                                      {% endif %}
+                                </span>
                             </div>
                             <div id="date_range_filter1" class="accordion-collapse collapse"> <!--Field IsolatDate-->
                                 <span>
@@ -541,7 +546,12 @@
                         <div class="accordion-item">
                             <div class="accordion-header">
                                 <span class="accordion-button collapsed text-break" data-bs-toggle="collapse"
-                                      data-bs-target="#date_range_filter2">Date range</span>
+                                      data-bs-target="#date_range_filter2">
+                                      Date range 
+                                      {% if 'date' in session['validatedfields_exp2obs_map'] %}
+                                      ({{session['validatedfields_exp2obs_map']['date']}})
+                                      {% endif %}
+                                </span>
                             </div>
                             <div id="date_range_filter2" class="accordion-collapse collapse"> <!--Field IsolatDate-->
                                 <span>
