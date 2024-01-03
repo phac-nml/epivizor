@@ -6,6 +6,9 @@ function openFileUploadDialog() {
     document.getElementById('file_selector').click();
 }
 
+/**
+ * Hide fields in left nav bar that were not selected in the validation/mapping stage
+ */
 function hideNavItemsNotSelected(){
     console.log('hideNavItemsNotSelected()')
     document.querySelectorAll('[id^="accordion_section_filters_subset"] .accordion-item').forEach(
@@ -14,8 +17,7 @@ function hideNavItemsNotSelected(){
                 item.classList.add('d-none')
             }  
         }
-        );
-    
+        ); 
 }
 /**
  * Updates file upload progress bar with the current upload value reported as a percentage for total
@@ -51,7 +53,7 @@ function updateTabTitlesSection(){
     console.log('Running updateTabTitlesSection()')
     Array.from(document.getElementsByClassName('tablink')).forEach((button)=>{
         //console.log(button.textContent)
-        var option = document.createElement("option");
+        let option = document.createElement("option");
         option.value = button.name;
         option.text = button.textContent;
         document.getElementById('tab_title_selectpicker').add(option)
@@ -66,11 +68,16 @@ function updateTabTitlesSection(){
  * @param {String} newTitle - Custom user title entered in the input field  
  */
 function updateTabTitle(newTitle){
-    var indexTabNameField = document.getElementById('tab_title_selectpicker').value
+    let indexTabNameField = document.getElementById('tab_title_selectpicker').value
     Array.from(document.getElementsByClassName('tablink')).forEach((tabElement) =>{
             if(tabElement.name === indexTabNameField){tabElement.textContent=newTitle}
         }
     )
+    Swal.fire({
+        title: "Success",
+        text: `Tab title updated successfully to ${newTitle}`,
+        icon: "success"
+      }); 
 }
 
 /**
@@ -206,7 +213,11 @@ function resetAllFilters(){
     document.getElementById("settings_selected_group1").innerHTML='-';
     document.getElementById("settings_selected_group2").innerHTML='-';
 
-    alert("Reset all data filters")
+    Swal.fire({
+        text: "All data filters were reset (erased) and unfiltered data reloaded",
+        icon: "info"
+      });
+
     if (document.querySelectorAll(`div[class^="js-plotly-plot"]`).length >0) {
         postPlotData()
     }
@@ -224,7 +235,11 @@ function updatePlotAttr(obj){
     //update plot title and exit the function
     if(obj.id === "plot_title_input_field") {
         Plotly.relayout(document.getElementById('plot_title_selectpicker').value, {'title': obj.value})
-        alert("Plot title changed to '"+obj.value+"'")
+        Swal.fire({
+            title: "Success",
+            text: "Plot title changed to '"+obj.value+"'",
+            icon: "success"
+          });
         return 0
     }
 
@@ -475,7 +490,7 @@ function postPlotData(source_call_id=null, extract_filtered_excel_data = false) 
             type: "POST",
             data: SelectedFieldsMap,
             success: function (response) {
-                let blob = new Blob([response], { type: 'text/plain' });
+                let blob = new Blob([response], {type: 'text/plain'});
                 let a = document.createElement('a');
                 a.href = window.URL.createObjectURL(blob);
                 a.download = "export_data.csv";
@@ -512,15 +527,18 @@ function postPlotData(source_call_id=null, extract_filtered_excel_data = false) 
             if('error' in plotsData){
                 alert(plotsData['error']);
             }else{
-                renderplots(plotsData); renderTraceControls(); 
+                renderplots(plotsData); 
+                renderTraceControls(); 
                 populate_settings_applied();
                 updateSunburstVisibleLevels();
             }
-            
-
         },
         error:  function (request, status, error) {
-            alert("ERROR (id:"+status+"): "+request.responseText+"\nSuggetions:\n1)Select other filters;\n2)Reupload data if session expired;\n3)Check connection or server is down.");
+            Swal.fire({
+                title: request.statusText,
+                text: `ERROR (status: ${status} error: ${error}))...\nSuggetions:\n1)Select other filters;\n2)Reupload data if session expired;\n3)Check connection or server is down)`,
+                icon: "error"
+            });
             $(".plottabs").show();
             $("#load_spinner_div").addClass("d-none");
             $('#content [id^="plotDiv"]').show();
@@ -545,21 +563,40 @@ function populate_settings_applied() {
     }
 
     let group1_filters_values=Array()
-    document.querySelectorAll("#accordion_section_filters_subset1 select").forEach(item =>{
+    document.querySelectorAll("#accordion_section_filters_subset1>div:not(.d-none) select").forEach(item =>{
         Array.from(item.options).forEach(element => {
             if(element.selected){
                 group1_filters_values.push(element.value)
             }
         });
     })
+    //collect date range selected values for group #1
+    document.querySelectorAll("#accordion_section_filters_subset1>div:not(.d-none) input[type=date]").forEach(item=>{
+        if(item.value === ''){
+            group1_filters_values.push('-')
+        }else{
+            group1_filters_values.push(item.value)
+        }
 
+    })
+
+    //collect date range selected values for group #2
     let group2_filters_values = Array()
-    document.querySelectorAll("#accordion_section_filters_subset2 select").forEach(item =>{
+    document.querySelectorAll("#accordion_section_filters_subset2>div:not(.d-none) select").forEach(item =>{
         Array.from(item.options).forEach(element => {
             if(element.selected){
                 group2_filters_values.push(element.value)
             }
         });
+    })
+
+    document.querySelectorAll("#accordion_section_filters_subset2>div:not(.d-none) input[type=date]").forEach(item=>{
+        if(item.value === ''){
+            group2_filters_values.push('-')
+        }else{
+            group2_filters_values.push(item.value)
+        }
+
     })
 
     if (group1_filters_values.length > 0){
@@ -583,7 +620,7 @@ function resizePlots(){
     console.log('resizing plots due to window change')
     let plots = document.getElementsByClassName('plotly');
     let plot_max_width = document.getElementById('content').clientWidth-50;
-    let plot_max_height = document.getElementById('navbar').clientHeight;
+    let plot_max_height = window.innerHeight
     for(let i=0; i<plots.length; i++){
         Plotly.relayout(plots[i].parentElement.id,{width: plot_max_width, height: plot_max_height})
     }
@@ -694,11 +731,11 @@ function generate_caption(caption, div_id){
  */
 function tabsPlotsControl(tabName,elmnt) {
     console.log('tabsPlotsControl()')
-    var i, tabcontent, tablinks;
+    let i, tabcontent, tablinks;
     tabcontent = document.getElementsByClassName("tabcontent");
 
     for (i = 0; i < tabcontent.length; i++) {
-        tabcontent[i].style.display = "none";
+        tabcontent[i].classList.add("d-none");
     }
     //remove previous styling if it exists to not accumulate previous changes
     tablinks = document.getElementsByClassName("tablink");
@@ -707,9 +744,10 @@ function tabsPlotsControl(tabName,elmnt) {
         tablinks[i].style.background = "";
 
     }
-    document.getElementById(tabName).style.display = "block";
+    document.getElementById(tabName).classList.remove("d-none");
+    document.getElementById(tabName).classList.add("d-block");
     elmnt.style.fontWeight="bold";
-    elmnt.style.background='darkgray';
+    elmnt.style.background="lightgray";
 
 }
 
@@ -775,4 +813,47 @@ function startFileUpload(){
  */
 function unlock_observed_fields(){
     document.querySelectorAll('.input_variables_table select').forEach( (i)=>{i.removeAttribute('disabled')})
+}
+
+
+
+/**
+ * Toggle between tab and list layouts for rendered plots
+ */
+function switchLayout(){
+    
+
+    let tabButtonsDiv = document.querySelector('.plottabs > div[class^=buttons]')
+
+    if (tabButtonsDiv.classList.contains('d-none') === true){ //from list --> tab layout
+        tabButtonsDiv.classList.remove('d-none')
+        tabButtonsDiv.classList.add('d-block')
+        document.querySelectorAll('#content div[class^=tabcontent]').forEach((elem, idx) =>{
+            if(idx !== 0){
+                elem.classList.remove('d-block')
+                elem.classList.add('d-none')
+            }    
+        })
+        Swal.fire({
+            text:"Layout switched from List to Tab layout",
+            icon: "info"
+        })
+    }else{                                  //from tab --> list layout
+        tabButtonsDiv.classList.add('d-none')
+        tabButtonsDiv.classList.remove('d-block')
+        document.querySelectorAll('#content div[class^=tabcontent]').forEach(elem =>{
+            elem.classList.add('d-block')
+            elem.classList.remove('d-none')
+        })
+        Swal.fire({
+            text:"Layout switched from Tab to List layout",
+            icon: "info"
+        })
+    }
+    //document.querySelectorAll('#content div[id^=plotDiv]')
+      
+    //document.querySelector('.plottabs > div[class^=buttons]').classList.add('d-none')  
+
+    //document.querySelectorAll('#content div[class^=tabcontent]')[1].classList.contains('d-none')
+
 }

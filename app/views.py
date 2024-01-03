@@ -345,10 +345,13 @@ def dashboard():
     jsonPlotsDict['captions'] = {}
     filter_fields2values_dict = {}
     df_column_names = []
-    print("dashboard()")
+ 
 
 
     form_data_dict = request.form.to_dict()  # convert form data from frontend to a dictionary
+
+    if form_data_dict == {}:
+        clearsession() #clear any session cookies that might be left over on first page load (detected by no filters applied yet)  
 
     if 'datafilters2apply' in form_data_dict:
         form_data_dict['datafilters2apply'] = json.loads(form_data_dict['datafilters2apply'])
@@ -360,6 +363,7 @@ def dashboard():
     if 'id' not in session or cache.get('df_dashboard') is None:
         session['id'] = ''.join(random.choice(string.ascii_uppercase + string.digits) for _ in range(10))
         session['filename'] = "NA"
+  
 
     # render blank dashboard and validation screen if input data is specified
     if 'file' in request.files and request.method == 'POST':
@@ -655,16 +659,17 @@ def dashboard():
     #This is return for AJAX function when data selectors such as group #1, group #2 filters, groupby were applied
     if 'datafilters2apply' in request.form.to_dict() and request.method == 'POST':
         print("Sending data back to the server (only plots)")
+        #filter dictionary on date filters if available
+        #jsonPlotsDict['form_data_dict'] = dict((k,form_data_dict['datafilters2apply'][k]) for k in form_data_dict['datafilters2apply'].keys() if 'date' in  k)
         return jsonPlotsDict
 
     print("Rendring the default template on the first data load")
-
-
+    
     #regular post response on the first global data load using Jinja2 templating 
     html = render_template(
         'dashboard.html',
-        title='Dashboard',
-        description='Dashboard for PulseNet and FoodNet Canada data visual analytics',
+        title='EpiVizor',
+        description='EpiVizor - dashboard for PulseNet and FoodNet Canada data visual analytics',
         method = request.method,
         plots=jsonPlotsDict,
         session_id=session['id'],
@@ -1046,7 +1051,7 @@ def renderHistPlot(df, df_col_name, form_data_dict, jsonPlotsDict, jsonPlotsDict
                 groups_total = df[~df.isin(['unknown'])].groupby(
                     form_data_dict['groupby_selector_value']).size().reset_index(
                     name='counts').sort_values(by='counts', ascending=False)[form_data_dict['groupby_selector_value']].to_list()
-                print(groups_total)
+                #print(groups_total)
                 #groups_total = [g for g in groups_total if g != 'unknown']
                 groups_select = sorted([re.sub(r'\.','\\.',str(value))for idx,value in enumerate(groups_total) if idx < 10]) #user might provide non-string values (e.g. floats)
 
@@ -1084,7 +1089,7 @@ def renderHistPlot(df, df_col_name, form_data_dict, jsonPlotsDict, jsonPlotsDict
 
                 fig.data=[fig.data[idx] for idx in np.argsort([i.name for i in fig.data])] #order alphabetically
                 for idx,trace in enumerate(fig.data):
-                    print(idx,trace.name)
+                    #print(idx,trace.name)
                     if trace.name == "unknown":
                         trace.update(visible='legendonly')
                         trace.marker.color= "#FF0000"

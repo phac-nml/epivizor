@@ -11,6 +11,7 @@
 <link rel="stylesheet" href="{{ url_for('static',filename='css/style.css') }}">
 <script src="{{ url_for('static',filename='js/epivizor.js') }}"></script>
 
+
 <head>
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
     <title>Dashboard</title>
@@ -140,7 +141,7 @@
 
 
 <div class="flex-container">
-    <div id="navbar">
+    <div id="navbar" class="shadow">
         <div id="container_filters_div">
             <div class="accordion" id="myAccordion">
                 <div class="accordion-item">
@@ -761,27 +762,24 @@
 
             </div>
 
-
+            
             <hr style="padding: 1px;margin: 0em;">
             <div class="form-check form-switch m-2">
                 <input id="percent_scale_toggle" onclick="postPlotData(this.id,false)" class="form-check-input" type="checkbox" role="switch" id="flexSwitchCheckDefault">
                 <label class="form-check-label" for="percent_scale_toggle">Enable y-axis % scale</label>
-
             </div>
             <div class="form-check form-switch m-2">
                 <input id="log_scale_toggle" onclick="postPlotData(this.id,false)" class="form-check-input" type="checkbox" role="switch" id="flexSwitchCheckDefault" >
                 <label class="form-check-label" for="log_scale_toggle">Enable y-axis log scale</label>
             </div>
-
+            
             <hr style="padding: 1px;margin: 0;">
             <div style="text-align: center" id="upload_button_div">
                 <form style="text-align: center;margin-bottom: 1px;" id="upload_file_form" action="/" method="post" enctype="multipart/form-data">
                     <input type='file' accept=".xlsx,.csv" onchange=startFileUpload() name='file' id='file_selector' hidden/>
-                    <button type="button" id="upload_data_button" onclick="openFileUploadDialog()" class="btn btn-danger m-1">UPLOAD</button>
-                    <button type="button" id="apply_filters_button" onclick="postPlotData()" class="btn btn-danger m-1">APPLY</button>
-                    <button type="button" id="reset_filters_button" onclick="resetAllFilters(this)" class="btn btn-danger m-1">RESET</button>
+                    <button type="button" id="upload_data_button" onclick="openFileUploadDialog()" class="btn btn-danger m-1 shadow">UPLOAD</button>
+                    <button type="button" id="apply_filters_button" onclick="postPlotData()" class="btn btn-danger m-1 shadow">APPLY</button>
                 </form>
-
             </div>
 
             <hr style="padding: 1px;margin: 0;">
@@ -793,6 +791,23 @@
                     data-bs-target="#plot_controls">PLOT CONTROLS</span>
                 </div>
                 <div id="plot_controls" class="accordion-collapse collapse show">
+                    <div class="p-1 d-flex gap-1">
+                        <button type="button" onclick=switchLayout() class="btn-sm btn-primary flex-fill shadow">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-layout-wtf" viewBox="0 0 16 16">
+                                <path d="M5 1v8H1V1zM1 0a1 1 0 0 0-1 1v8a1 1 0 0 0 1 1h4a1 1 0 0 0 1-1V1a1 1 0 0 0-1-1zm13 2v5H9V2zM9 1a1 1 0 0 0-1 1v5a1 1 0 0 0 1 1h5a1 1 0 0 0 1-1V2a1 1 0 0 0-1-1zM5 13v2H3v-2zm-2-1a1 1 0 0 0-1 1v2a1 1 0 0 0 1 1h2a1 1 0 0 0 1-1v-2a1 1 0 0 0-1-1zm12-1v2H9v-2zm-6-1a1 1 0 0 0-1 1v2a1 1 0 0 0 1 1h6a1 1 0 0 0 1-1v-2a1 1 0 0 0-1-1z"/>
+                            </svg>
+                            Layout
+                        </button> 
+                        <button type="button" id="reset_filters_button" onclick="resetAllFilters()" 
+                        class="btn-sm btn-primary flex-fill shadow">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-bootstrap-reboot" viewBox="0 0 16 16">
+                                <path d="M1.161 8a6.84 6.84 0 1 0 6.842-6.84.58.58 0 1 1 0-1.16 8 8 0 1 1-6.556 3.412l-.663-.577a.58.58 0 0 1 .227-.997l2.52-.69a.58.58 0 0 1 .728.633l-.332 2.592a.58.58 0 0 1-.956.364l-.643-.56A6.812 6.812 0 0 0 1.16 8z"/>
+                                <path d="M6.641 11.671V8.843h1.57l1.498 2.828h1.314L9.377 8.665c.897-.3 1.427-1.106 1.427-2.1 0-1.37-.943-2.246-2.456-2.246H5.5v7.352zm0-3.75V5.277h1.57c.881 0 1.416.499 1.416 1.32 0 .84-.504 1.324-1.386 1.324h-1.6z"/>
+                              </svg>
+                            Reset
+                        </button>    
+                    </div>
+                    <hr style="padding: 1px;margin: 3px;">    
                     <div id="trace_names_colors_list"></div>
                     <hr style="padding: 1px;margin: 3px;">
                     <div id="plot_title_controls">
@@ -837,7 +852,7 @@
                         <span>Dashboard version:</span><span>0.0.5</span>
                         <span>Filters group #1:</span><span id="settings_selected_group1">-</span>
                         <span>Filters group #2:</span><span id="settings_selected_group2">-</span>
-                        <span>Group by variable:</span><span id="settings_selected_groupby">-</span>
+                        <span>Group by:</span><span id="settings_selected_groupby">-</span>
                     </div>
                 </div>
             </div>
@@ -861,7 +876,7 @@
         
 
     </div>
-    <div id="content">
+    <div id="content"> 
         <div id="load_spinner_div" class="position-relative w-100 h-100 d-flex flex-column align-items-center bg-white justify-content-center">
             <div class="spinner-border text-primary"  role="status"></div>
             <span class="text-primary">Loading data or rendering plots. Please wait ...</span>
@@ -872,12 +887,12 @@
         {% if method == "GET" or get_flashed_messages()|length != 0 %}
         <div id="info_message_file_upload_request" class="position-relative w-100 h-100 d-flex flex-column align-items-center bg-white justify-content-center">
             <a href="javascript:void(0)" onclick="openFileUploadDialog()">UPLOAD DATA TO RENDER (xlsx or csv)</a>
-            <a href="{{ url_for('static',filename='ecoli_sample_data.csv') }}">Download a demo E.coli dataset</a>
+            <a href="{{ url_for('static',filename='ecoli_sample_data.csv') }}">Download E.coli demo dataset</a>
         </div>
         {% endif %}
 
         {% if not render_splash_screen %}
-        <div class="d-flex flex-column plottabs d-none">
+        <div class="d-flex flex-column plottabs shadow d-none">
             <div class="buttons">
             </div>
         </div>
