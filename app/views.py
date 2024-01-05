@@ -377,7 +377,7 @@ def dashboard():
         else:
             raise ValueError("unsupported file extension for file {}".format(filename))
 
-        metadata_dict = uploadvalidatedata(request.files['file'], extension)
+        metadata_dict, upload_errors = uploadvalidatedata(request.files['file'], extension)
         session['filename'] = secure_filename(request.files['file'].filename)
         print("rendering splash screen after file upload to the server ...")
 
@@ -396,6 +396,8 @@ def dashboard():
 
             )
         else:
+            print(f"metadata_dict {upload_errors}")
+            flash(upload_errors)
             return render_template(
                     'dashboard.html',
                     title='Dashboard',
@@ -405,7 +407,7 @@ def dashboard():
                     method=request.method,
                     plots={},
                     session_id=session['id'],
-                    file_uploaded=session['filename'],
+                    file_uploaded='-',
                     filters_fields2values_dict={}
 
             )
@@ -422,8 +424,8 @@ def dashboard():
             description='Dashboard for PulseNet and FoodNet Canada data visual analytics',
             method = request.method,
             plots={},
-            session_id="NA",
-            file_uploaded="NA",
+            session_id="-",
+            file_uploaded="-",
             filters_fields2values_dict={},
             render_splash_screen = False
         )
@@ -1931,9 +1933,9 @@ def uploadvalidatedata(file, extension):
     print("Checkin data on duplicated entries ... ")
     if df.columns.duplicated().any():
         dupl_col_names = ",".join(df.columns[df.columns.duplicated()].to_list())
-        print(f"Duplicated columns found! Duplicated column(s) name(s): {dupl_col_names}")
-        flash(f"Duplicated column(s) found ({dupl_col_names}) in file {file.filename}! Aborting upload. Make sure input has unique header names")
-        return {}
+        error_msg = f'''Duplicated column(s) found ({dupl_col_names}) in file {file.filename}! Aborting upload. Make sure input has unique header names'''
+        print()
+        return {}, error_msg
     #    df=df.loc[:,df.columns.duplicated()==False].copy()
     
     print("Empty rows cleaning")
@@ -2011,7 +2013,7 @@ def uploadvalidatedata(file, extension):
                 percent_missing_str = str(percent_missing)
             metadata_dict['warnings'][field_obs] = percent_missing_str + '% missing values'
        
-    return metadata_dict
+    return metadata_dict, ''
 
 
 def generateAgeBarPlot(df, form_data_dict, df2=pd.DataFrame()):

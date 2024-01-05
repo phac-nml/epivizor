@@ -641,8 +641,8 @@ function renderplots(graphsMap){
 
     console.log(graphsMap);
     let is_info_upload_message_exists = document.querySelector('#info_message_file_upload_request')
-    if (is_info_upload_message_exists !== null){
-        is_info_upload_message_exists.remove()
+    if (is_info_upload_message_exists !== null && Object.keys(graphsMap).length !== 0){
+        is_info_upload_message_exists.classList.add('d-none')
     }
     
 
@@ -764,7 +764,7 @@ function startFileUpload(){
         }
         let is_info_upload_message_exists = document.querySelector('#info_message_file_upload_request')
         if (is_info_upload_message_exists !== null){
-            is_info_upload_message_exists.remove()
+            is_info_upload_message_exists.classList.add('d-none');
         }
       
         let processUploadBar = $(".progressUploadBar")

@@ -23,21 +23,21 @@
 
 <body>
 
-{% with messages = get_flashed_messages() %}
+{% with messages = get_flashed_messages(with_categories=true) %}
   {% if messages and render_splash_screen == False %}
     <script>
-        let msg = "<div class='text-start'><ul>" + 
-                  {% for m in messages %}
+        if (typeof msg === 'undefined') {
+            let msg=''
+        }    
+        msg = "<div class='text-start'><ul>" + 
+                  {% for category, m in messages %}
                    "<li>{{ m }}</li>"+
                   {% endfor %}
-                   "</ul></div>"
-        console.log(msg)           
+                   "</ul></div>"          
         Swal.fire({
-            icon: "info",
             title: "Info",
             html: msg        
-            });
-        //document.getElementById('info_message_file_upload_request').classList.remove('d-none');  
+            }); 
     </script>
   {% endif %}
 {% endwith %}
@@ -774,8 +774,8 @@
             </div>
             
             <hr style="padding: 1px;margin: 0;">
-            <div style="text-align: center" id="upload_button_div">
-                <form style="text-align: center;margin-bottom: 1px;" id="upload_file_form" action="/" method="post" enctype="multipart/form-data">
+            <div class="d-flex justify-content-center" id="upload_button_div">
+                <form id="upload_file_form" action="/" method="post" enctype="multipart/form-data">
                     <input type='file' accept=".xlsx,.csv" onchange=startFileUpload() name='file' id='file_selector' hidden/>
                     <button type="button" id="upload_data_button" onclick="openFileUploadDialog()" class="btn btn-danger m-1 shadow">UPLOAD</button>
                     <button type="button" id="apply_filters_button" onclick="postPlotData()" class="btn btn-danger m-1 shadow">APPLY</button>
