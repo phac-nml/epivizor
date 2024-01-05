@@ -508,8 +508,7 @@ function postPlotData(source_call_id=null, extract_filtered_excel_data = false) 
 
 
     $("#load_spinner_div").removeClass("d-none");
-    $('#content [id^="plotDiv"]').hide();
-    $(".plottabs").hide();
+    $(".plottabs").addClass('d-none');
 
 
     //default POST AFTER dashboard was loaded with initial data

@@ -1089,7 +1089,9 @@ def renderHistPlot(df, df_col_name, form_data_dict, jsonPlotsDict, jsonPlotsDict
 
                 fig.data=[fig.data[idx] for idx in np.argsort([i.name for i in fig.data])] #order alphabetically
                 for idx,trace in enumerate(fig.data):
-                    #print(idx,trace.name)
+                    #print(idx,trace.name, len(px.colors.qualitative.Plotly))
+                    if idx >= len(px.colors.qualitative.Plotly)-1: #there are 10 colours, so if idx is greater repeat again colours
+                        idx = idx%len(px.colors.qualitative.Plotly)
                     if trace.name == "unknown":
                         trace.update(visible='legendonly')
                         trace.marker.color= "#FF0000"
@@ -1858,8 +1860,15 @@ def renderEpiCurve(df, x_time_var, form_data_dict, jsonPlotsDict, jsonPlotsDictK
 
             )
             unique_categories=sorted(set(fig.data[1].x).union(fig.data[0].x))
-            group1_counts = [fig.data[0].y[fig.data[0].x.index(date)] if date in fig.data[0].x else 0  for date in unique_categories]
-            group2_counts = [fig.data[1].y[fig.data[1].x.index(date)] if date in fig.data[1].x else 0  for date in unique_categories ]
+            
+            if isinstance(fig.data[0].x, tuple):
+                group1_counts = [fig.data[0].y[fig.data[0].x.index(date)] if date in fig.data[0].x else 0  for date in unique_categories ]
+                group2_counts = [fig.data[1].y[fig.data[1].x.index(date)] if date in fig.data[1].x else 0  for date in unique_categories ]
+            else:     
+                group1_counts = [fig.data[0].y[np.where(fig.data[0].x == date)[0][0]] if date in fig.data[0].x else 0  for date in unique_categories]
+                group2_counts = [fig.data[1].y[np.where(fig.data[1].x == date)[0][0]] if date in fig.data[1].x else 0  for date in unique_categories ]
+
+            
             if len(group1_counts) >=3 and len(group2_counts)>=3 :
                 corr, pvalue, npoints = calculate_correlation(group1_counts,group2_counts, 'epicurve')
                 jsonPlotsDict['captions'][jsonPlotsDictKey]=jsonPlotsDict['captions'][jsonPlotsDictKey]+ \
