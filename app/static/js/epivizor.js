@@ -316,6 +316,12 @@ async function saveweb2pdf(){
    printHtml.document.close();
 }
 
+function update_delimiter_all_selector(elm){
+    let new_delim_value = elm.value;
+    document.querySelectorAll('.delimiter_selector').forEach(elm => {
+        elm.value = new_delim_value
+    })
+}
     
 /**
  * Submit the Validation Screen data including the selected global delimiter value and observed to expected fields mappings selected via dropdowns
@@ -333,7 +339,7 @@ function submitValidatedFields(){
     var rows_dom = document.getElementsByTagName('tr');
     var expectFieldsList = [];
     for (var i=1; i<document.getElementsByTagName('tr').length; i++){
-        expectFieldsList.push(rows_dom[i].getElementsByTagName('td')[1].textContent);
+        expectFieldsList.push(rows_dom[i].getElementsByTagName('td')[2].textContent);
     }
 
     console.log(expectFieldsList);
@@ -344,7 +350,6 @@ function submitValidatedFields(){
         }else{
             SelectedValidatedFields[ expectFieldsList[i] ] = 'notselected';
         }
-
     }
 
     console.log(SelectedValidatedFields);
@@ -357,7 +362,7 @@ function submitValidatedFields(){
     const hiddenField2 = document.createElement('input');
     hiddenField2.type = 'hidden';
     hiddenField2.name = 'delimiter_symbol';
-    hiddenField2.value = document.getElementById('delimiter_selector').value;
+    hiddenField2.value = document.querySelector('.delimiter_selector').value
     form.appendChild(hiddenField2);
 
     document.getElementById('overlay').style.display='none'; //remove splash screen
@@ -729,7 +734,7 @@ function generate_caption(caption, div_id){
  * @param {Object DOM} elmnt -  The <button> DOM element of a plot tab to style
  */
 function tabsPlotsControl(tabName,elmnt) {
-    console.log('tabsPlotsControl()')
+    console.log(`tabsPlotsControl(${tabName} ${elmnt})`)
     let i, tabcontent, tablinks;
     tabcontent = document.getElementsByClassName("tabcontent");
 
@@ -821,6 +826,7 @@ function unlock_observed_fields(){
  */
 function switchLayout(){
     
+    
 
     let tabButtonsDiv = document.querySelector('.plottabs > div[class^=buttons]')
 
@@ -837,7 +843,9 @@ function switchLayout(){
             text:"Layout switched from List to Tab layout",
             icon: "info"
         })
-    }else{                                  //from tab --> list layout
+    }else{   
+        tabcontent = document.getElementsByClassName("tabcontent")                               //from tab --> list layout
+        tabsPlotsControl(tabcontent[0].id, document.querySelector('.tablink'))
         tabButtonsDiv.classList.add('d-none')
         tabButtonsDiv.classList.remove('d-block')
         document.querySelectorAll('#content div[class^=tabcontent]').forEach(elem =>{

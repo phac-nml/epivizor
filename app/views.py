@@ -67,7 +67,6 @@ def extactFilterValuesFromPOST2Dict(form_filt_values_dict,setname='filterset1'):
     filter_dict['geoloc_id'] = list()
     filter_dict['source_site'] = list()
     filter_dict['source_type'] = list()
-    filter_dict['geoloc_id'] = list()
 
     for formkey in form_filt_values_dict:
         print(formkey)
@@ -1075,7 +1074,7 @@ def renderHistPlot(df, df_col_name, form_data_dict, jsonPlotsDict, jsonPlotsDict
                                        height=600,
                                        histnorm='percent')
                     fig.layout['yaxis']['title']='% of trace total'
-                    fig.update_layout({'barmode':'group'})
+                    fig.update_layout({'barmode':'relative'})
                     fig.update_yaxes(type='linear')
                     print("Done")
                 else:
@@ -1083,7 +1082,7 @@ def renderHistPlot(df, df_col_name, form_data_dict, jsonPlotsDict, jsonPlotsDict
                                        x=df_col_name, color=form_data_dict['groupby_selector_value'],
                                        title=plot_title,
                                        height=600)
-                    fig.update_layout(barmode='group')
+                    fig.update_layout(barmode='relative')
                     if 'log_yscale' in form_data_dict:
                         fig.update_yaxes(type='log', title = 'counts')
                     else:
@@ -1706,7 +1705,7 @@ def renderEpiCurve(df, x_time_var, form_data_dict, jsonPlotsDict, jsonPlotsDictK
             ]
         )
         jsonPlotsDict['captions'][jsonPlotsDictKey] = "Sample counts per time unit (day, week, month or year) " \
-                                                         "on {} samples with available information" \
+                                                         "on {} samples with available information " \
                                                          "(and {} samples with unknown time information).".format(
             sum(idx_date_ok),
             df1_n_missing
