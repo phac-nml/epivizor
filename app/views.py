@@ -1996,6 +1996,7 @@ def uploadvalidatedata(file, extension):
                                                     [str(df.dtypes[field]) for field in
                                                      metadata_dict['fields_counts_observed']]))
     metadata_dict['warnings'] = dict.fromkeys(metadata_dict['fields_observed'], '')
+    print(metadata_dict['fields_counts_observed'])
 
     # find missing observed missing fieldnames
     for field_obs in metadata_dict['fields_observed']:

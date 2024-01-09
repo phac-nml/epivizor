@@ -116,12 +116,11 @@
                     {%endfor%}
                     </select>
                 </td>
-
                 <td>{{field_exp}}</td>
                 <td>{{metadata['fields_types_expected'][field_exp]}}</td>
-                <td>{{metadata['fields_counts_observed'][field_exp]}}</td>
-                <td>{{metadata['fields_counts_unique_observed'][field_exp]}}</td>
-                <td>{{metadata['fields_counts_missing_observed'][field_exp]}}</td>
+                <td>{%if field_exp in metadata['fields_counts_observed']%}{{metadata['fields_counts_observed'][field_exp]}}{%else%}-{%endif%}</td>
+                <td>{%if field_exp in metadata['fields_counts_unique_observed']%}{{metadata['fields_counts_unique_observed'][field_exp]}}{%else%}-{%endif%}</td>
+                <td>{%if field_exp in metadata['fields_counts_missing_observed']%}{{metadata['fields_counts_missing_observed'][field_exp]}}{%else%}-{%endif%}</td>
                 <td>
                     {% if 'list' in metadata['fields_types_expected'][field_exp] %}
                     <select class="delimiter_selector" onchange=update_delimiter_all_selector(this) style="width:70px;display:inline">
@@ -147,11 +146,19 @@
                     -
                     {% endif%}
                 </td>
+                <td>
                 {% if field_exp in metadata['fields_observed']%}
-                <td>{{metadata['warnings'][field_exp]}}</td>
+                    {%if metadata['warnings'][field_exp]|length == 0 %}
+                    -
+                    {% else %}
+                    {{metadata['warnings'][field_exp]}}
+                    {% endif %}
                 {% else %}
-                <td>The selected field DOES NOT match the default field (<b>'{{field_exp }}'</b>)</td>
+                    The <b>'{{field_exp }}'</b> field is not found
                 {% endif %}
+                </td>    
+               
+                
             </tr>
         {%endfor%}
     </table>
@@ -960,11 +967,11 @@
 
     //always render trace control upon page every load
     $(document).ready( function () {
-                renderTraceControls();
-                updatePlotTitlesSection();
-                updateTabTitlesSection();
-                updateSunburstMaxLevels()
-    });
+        renderTraceControls();
+        updatePlotTitlesSection();
+        updateTabTitlesSection();
+        updateSunburstMaxLevels();
+    })
 
     $("#plot_title_selectpicker").change(function(){
             document.getElementById("plot_title_input_field").value = $("#plot_title_selectpicker option:selected")[0].textContent
@@ -976,17 +983,22 @@
     })
 
     function update_validate_table_row(selected_observed_value, expected_value, tr_html){
-        let validation_table_metadata = {};
+        let validation_table_metadata = {}
+        let header2index_map={}
+
         {%if metadata%}
             validation_table_metadata = {{ metadata | safe }};
         {% endif %}
         if (validation_table_metadata === {}){
-            console.log("ERROR: validation_table_metadata not provided!")
-            return 1
+            console.log("update_validate_table_row(): ERROR: validation_table_metadata not provided!")
         }
-        console.log(selected_observed_value,expected_value)
-        console.log(validation_table_metadata)
-        let header2index_map={};
+        
+        Object.keys(validation_table_metadata['warnings']).forEach((key)=>{
+            if(validation_table_metadata['warnings'][key] === ''){
+                validation_table_metadata['warnings'][key]='-'
+            }    
+        })
+
         document.querySelectorAll('.input_variables_table tr')[0].querySelectorAll('th').forEach(function(element,index){
             header2index_map[String(element.textContent)]=index;
         })
@@ -995,7 +1007,6 @@
             validation_table_metadata['fields_counts_observed'][selected_observed_value] !== validation_table_metadata['fields_counts_unique_observed'][selected_observed_value]){
             validation_table_metadata['warnings'][selected_observed_value]='Found duplicate values. Sample identifiers should be unique.'
         }
-
         tr_html.getElementsByTagName('td')[header2index_map['Total']].textContent=validation_table_metadata['fields_counts_observed'][selected_observed_value]
         tr_html.getElementsByTagName('td')[header2index_map['Unique']].textContent=validation_table_metadata['fields_counts_unique_observed'][selected_observed_value]
         tr_html.getElementsByTagName('td')[header2index_map['Missing']].textContent=validation_table_metadata['fields_counts_missing_observed'][selected_observed_value]
