@@ -996,11 +996,11 @@ def renderBarComponentsPlot(df, df_col_name, form_data_dict, jsonPlotsDict, json
                 ]),
                 direction="down",
                 active=0,
-                pad={"r": 0,"l":0, "t": -10,"b":0},
+                pad={"r": 0,"l":0, "t": -35,"b":0},
                 showactive=True,
                 x=1,
                 xanchor="right",
-                y=1.1,
+                y=1,
                 yanchor="top"
             )
         ]
@@ -1152,11 +1152,11 @@ def renderHistPlot(df, df_col_name, form_data_dict, jsonPlotsDict, jsonPlotsDict
                         ]),
                         direction="down",
                         active=0,
-                        pad={"r": 0,"l":0, "t": -10,"b":0},
+                        pad={"r": 0,"l":0, "t": -35,"b":0},
                         showactive=True,
                         x=1,
                         xanchor="right",
-                        y=1.1,
+                        y=1,
                         yanchor="top"
                     )
                 ]
@@ -1259,11 +1259,11 @@ def renderHistPlot(df, df_col_name, form_data_dict, jsonPlotsDict, jsonPlotsDict
                     ]),
                     direction="down",
                     active=0,
-                    pad={"r": 0,"l":0, "t": -10,"b":0},
+                    pad={"r": 0,"l":0, "t": -35,"b":0},
                     showactive=True,
                     x=1,
-                    xanchor="left",
-                    y=1.2,
+                    xanchor="right",
+                    y=1,
                     yanchor="top"
                 )
             ]
@@ -1341,11 +1341,11 @@ def renderEpiCurve(df, x_time_var, form_data_dict, jsonPlotsDict, jsonPlotsDictK
         ]),
         direction="down",
         active=0,
-        pad={"r": 0,"l":0, "t": -10,"b":0},
+        pad={"r": 0,"l":0, "t": -35,"b":0},
         showactive=True,
         x=1,
         xanchor="right",
-        y=1.1,
+        y=1,
         yanchor="top"
     )
 
@@ -1530,11 +1530,11 @@ def renderEpiCurve(df, x_time_var, form_data_dict, jsonPlotsDict, jsonPlotsDictK
                                      'type': 'bar',
                                      'y': group_plot_vals_dict['monthly']['y'],
                                      'x': [group_plot_vals_dict['monthly']['x']]
-                                     }, {'title': 'Epidemiological curve (Montly)',
+                                     }, {'title': 'Epidemiological curve (Monthly)',
                                          'yaxis.title': fig.layout.yaxis.title.text, 'xaxis.title': "Month",
                                          'showlegend': True}
                                 ],
-                                label="Montly",
+                                label="Monthly",
                                 method="update"
                             ),
                             dict(
@@ -1553,10 +1553,10 @@ def renderEpiCurve(df, x_time_var, form_data_dict, jsonPlotsDict, jsonPlotsDictK
                         ]),
                         active=0,
                         yanchor="top",
-                        pad={"r": 0,"l":0, "t": -10,"b":0},
-                        xanchor="right",
-                        x=0.6,
-                        y=1.13,
+                        pad={"r": 0,"l":0, "t": -35,"b":0},
+                        xanchor="center",
+                        x=0.5,
+                        y=1,
                         showactive=True
                     ),
                     dropdown_plot_type_dict
@@ -1696,8 +1696,10 @@ def renderEpiCurve(df, x_time_var, form_data_dict, jsonPlotsDict, jsonPlotsDictK
                     ]),
                     active=0,
                     yanchor="top",
-                    x=0.6,
-                    y=1.13,
+                    xanchor="center",
+                    pad={"r": 0,"l":0, "t": -35,"b":0},
+                    x=0.5,
+                    y=1,
                     showactive=True
                 ),
                 dropdown_plot_type_dict
@@ -1843,8 +1845,10 @@ def renderEpiCurve(df, x_time_var, form_data_dict, jsonPlotsDict, jsonPlotsDictK
                         ]),
                         active=0,
                         yanchor="top",
-                        x=0.6,
-                        y=1.13,
+                        xanchor="center",
+                        pad={"r": 0,"l":0, "t": -35,"b":0},
+                        x=0.5,
+                        y=1,
                         showactive=True
                     ),
                     dropdown_plot_type_dict

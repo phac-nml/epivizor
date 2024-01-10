@@ -704,26 +704,11 @@ function renderplots(graphsMap){
             document.querySelector(".plottabs .buttons .tablink").click(); //click on the first one
             resizePlots();
             hideNavItemsNotSelected();
-            placeTraceOrderingSelectorTopRight();
         }
     }
 }
 
 
-/**
- * Place the dropdown menu of the rendered plot to the top upper right position
- */
-function placeTraceOrderingSelectorTopRight(){
-    let rectPlotContainer = document.querySelector('.svg-container').getBoundingClientRect()
-    //let rectDropDownMenu = document.querySelector('.updatemenu-header').getBoundingClientRect()
-    console.log(`placeTraceOrderingSelectorTopRight(): ${rectPlotContainer.width} - ${rectDropDownMenu.width} = ${rectPlotContainer.width-rectDropDownMenu.width}`)
-    document.querySelectorAll('.updatemenu-header-group').forEach(plot => {
-        if (plot.querySelector('.updatemenu-header-arrow')){
-            plot.setAttribute('transform',`translate(${plot.getBoundingClientRect().width-rectDropDownMenu.width-2},37)`)
-
-        }
-    })
-}
 /**
  * Generates a caption by accessing a specified plot <div> with the plot. Creates a new caption in the <p> tag or replaces text if it already exists 
  * @param {String} caption - The text of a figure caption to add or replace
