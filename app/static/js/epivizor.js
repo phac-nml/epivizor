@@ -302,7 +302,7 @@ async function saveweb2pdf(){
    const date = new Date();
    var printHtml = window.open('', 'PrintWindow', '_top');
    var paramsSession = document.querySelectorAll('.settings_selected_grid span')
-   var pageHtml = '<head><title>print preview</title><head>'
+   var pageHtml = '<head><title>print preview</title><link href="/static/css/bootstrap.min.css" rel="stylesheet" type="text/css"><head>'
    pageHtml += '<div style="text-align:center"><button onclick="window.print()">Print This Page</button></div>\n'
    pageHtml+='<p style="text-align:center">File:'+paramsSession[3].textContent+' Date:'+date.getDate()+'-'+
              (date.getMonth()+1)+'-'+date.getFullYear()+'@'+date.getHours()+':'+date.getMinutes()+'</p>'
