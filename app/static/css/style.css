@@ -102,8 +102,9 @@ table.input_variables_table tr:hover {background-color: #ddd;}
 .tooltip {
     position: relative;
     display: inline-block;
-    border-bottom: 1px dotted black;
+    /*border-bottom: 1px dotted black;*/
     opacity:1;
+    z-index:1;
 }
 
 .tooltip .tooltiptext {
