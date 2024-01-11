@@ -108,11 +108,12 @@ table.input_variables_table tr:hover {background-color: #ddd;}
 
 .tooltip .tooltiptext {
     visibility: hidden;
-    background-color: black;
+    background-color: grey;
     color: #fff;
     text-align: center;
     border-radius: 5px;
     padding: 5px 0;
+    opacity: 0.9;
 
     /* Position the tooltip */
     position: absolute;

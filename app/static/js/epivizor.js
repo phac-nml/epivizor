@@ -402,7 +402,10 @@ function clearSession(targeturl){
  */
 function postPlotData(source_call_id=null, extract_filtered_excel_data = false) {
     if($('.js-plotly-plot').length === 0){
-        alert("No rendered plots. Aborting");
+        Swal.fire({
+            text: "No rendered plots detected. Can not apply any filters!",
+            icon: "error"
+        });
         document.getElementById('percent_scale_toggle').checked=false;
         document.getElementById('log_scale_toggle').checked=false;
         return false
