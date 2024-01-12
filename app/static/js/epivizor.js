@@ -35,6 +35,13 @@ function progressHandler(event) {
  */
 function updatePlotTitlesSection() {
     console.log('Running updatePlotTitlesSection() to update plot titles selector')
+    if(document.querySelectorAll('#plot_title_selectpicker>option').length > 0){
+        document.querySelectorAll('#plot_title_selectpicker>option').forEach(
+            e => {e.remove()}
+        );
+    }  
+    console.log(document.querySelectorAll('#plot_title_selectpicker>option').length);
+
     document.querySelectorAll('.plot-container').forEach( (element, index) => {
         //console.log(element.parentElement.id)
         var option = document.createElement("option");
@@ -51,6 +58,12 @@ function updatePlotTitlesSection() {
  */
 function updateTabTitlesSection(){
     console.log('Running updateTabTitlesSection()')
+    if(document.querySelectorAll('#tab_title_selectpicker>option').length > 0){
+        document.querySelectorAll('#tab_title_selectpicker>option').forEach(
+            e => {e.remove()}
+        );
+    }
+
     Array.from(document.getElementsByClassName('tablink')).forEach((button)=>{
         //console.log(button.textContent)
         let option = document.createElement("option");
@@ -73,6 +86,8 @@ function updateTabTitle(newTitle){
             if(tabElement.name === indexTabNameField){tabElement.textContent=newTitle}
         }
     )
+    updateTabTitlesSection();
+    document.querySelector('#tab_title_input_field').value = '';
     Swal.fire({
         title: "Success",
         text: `Tab title updated successfully to ${newTitle}`,
@@ -235,6 +250,11 @@ function updatePlotAttr(obj){
     //update plot title and exit the function
     if(obj.id === "plot_title_input_field") {
         Plotly.relayout(document.getElementById('plot_title_selectpicker').value, {'title': obj.value})
+        let currentSelValue = $('#plot_title_selectpicker').selectpicker("option:selected").val();
+        updatePlotTitlesSection();
+        $("#plot_title_selectpicker").selectpicker('val',currentSelValue);
+        obj.value='';
+
         Swal.fire({
             title: "Success",
             text: "Plot title changed to '"+obj.value+"'",
@@ -869,12 +889,21 @@ function switchLayout(){
 
 /**
  * Increase font size of the x-axis labels in bar/hist types of plots
- * @param {*} action: string either + or - sign to indicate increase or decrease action 
+ * @param {*} action: string either '+' or '-' sign to indicate increase or decrease action 
  * @returns return null value if no plot is selected or wrong plot type
  */
 
 function updateHistLabelSize(action){
     let plotDivName = document.querySelector('#plot_title_controls select').value;
+
+    if (plotDivName === ''){
+        Swal.fire({
+            text: 'No plot selected. Select a plot to change its font size',
+            icon: 'error'
+        })
+        return null
+    }
+
     if(document.querySelector(`#${plotDivName} .plot .barlayer`) === null){
         Swal.fire(
             {
@@ -884,13 +913,7 @@ function updateHistLabelSize(action){
         )
         return null
     }
-    if (plotDivName === ''){
-        Swal.fire({
-            text: 'No plot selected. Select a plot to change its font size',
-            icon: 'error'
-        })
-        return null
-    }
+    
     let currentFontSize = parseInt(document.querySelector(`#${plotDivName} .xaxislayer-above .xtick text`).style.fontSize);
 
     if(action === '+'){

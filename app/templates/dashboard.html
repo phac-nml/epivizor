@@ -861,18 +861,18 @@
                     <div class="accordion-item">
                         <div class="accordion-header">
                             <span class="accordion-button collapsed fw-bold" data-bs-toggle="collapse"
-                            data-bs-target="#plot_title_controls">CHANGE PLOT NAME</span>
+                            data-bs-target="#plot_title_controls">CHANGE PLOT</span>
                         <div id="plot_title_controls" class="collapse">
                             <select class="selectpicker show-tick mb-1" id="plot_title_selectpicker" style="right: 0; left: auto;"
                                     data-width="100%" data-size="5" data-live-search="true" data-actions-box="false"
-                                    title="Select plot title to change ..."
+                                    title="Select plot to change ..."
                             >
                             </select>
-                            <input id="plot_title_input_field" type="text" name="0" value="" placeholder="Enter a new plot title" class="form-control mb-1"
+                            <input id="plot_title_input_field" type="text" name="0" value="" placeholder="Enter new plot title" class="form-control mb-1"
                                 onchange="updatePlotAttr(this)" style="background-color: whitesmoke;">
                             <div class="d-flex flex-row  align-items-center flex-nowrap justify-content-center">
                                 <span class="p-1 flex-fill">
-                                x-axis labels size
+                                x-axis label size
                                 </span>
                                 <button type="button" onclick="updateHistLabelSize('+')" class="btn btn-primary m-1 shadow">
                                     +
@@ -888,7 +888,7 @@
                     <div class="accordion-item">
                         <div class="accordion-header">
                             <span class="accordion-button collapsed fw-bold" data-bs-toggle="collapse"
-                            data-bs-target="#tab_name_change">CHANGE TAB NAME</span>
+                            data-bs-target="#tab_name_change">CHANGE TAB</span>
                         </div>
                         <div id="tab_name_change" class="collapse">
                             <select class="selectpicker show-tick mb-1" id="tab_title_selectpicker" style="right: 0; left: auto;"
@@ -1022,14 +1022,14 @@
         updateSunburstMaxLevels();
     })
 
-    $("#plot_title_selectpicker").change(function(){
-            document.getElementById("plot_title_input_field").value = $("#plot_title_selectpicker option:selected")[0].textContent
-    })
+    //$("#plot_title_selectpicker").change(function(){
+    //        document.getElementById("plot_title_input_field").value = $("#plot_title_selectpicker option:selected")[0].textContent
+    //})
 
         
-    $("#tab_title_selectpicker").change(function(){
-        document.getElementById("tab_title_input_field").value = $("#tab_title_selectpicker option:selected")[0].textContent
-    })
+    //$("#tab_title_selectpicker").change(function(){
+    //    document.getElementById("tab_title_input_field").value = $("#tab_title_selectpicker option:selected")[0].textContent
+    //})
 
     function update_validate_table_row(selected_observed_value, expected_value, tr_html){
         let validation_table_metadata = {}
