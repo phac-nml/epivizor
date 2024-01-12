@@ -845,7 +845,6 @@
                                 <path d="M5 1v8H1V1zM1 0a1 1 0 0 0-1 1v8a1 1 0 0 0 1 1h4a1 1 0 0 0 1-1V1a1 1 0 0 0-1-1zm13 2v5H9V2zM9 1a1 1 0 0 0-1 1v5a1 1 0 0 0 1 1h5a1 1 0 0 0 1-1V2a1 1 0 0 0-1-1zM5 13v2H3v-2zm-2-1a1 1 0 0 0-1 1v2a1 1 0 0 0 1 1h2a1 1 0 0 0 1-1v-2a1 1 0 0 0-1-1zm12-1v2H9v-2zm-6-1a1 1 0 0 0-1 1v2a1 1 0 0 0 1 1h6a1 1 0 0 0 1-1v-2a1 1 0 0 0-1-1z"/>
                             </svg>
                             Switch layout
-                            
                         </button> 
                         <button type="button" id="reset_filters_button" onclick="resetAllFilters()" 
                         class="btn-sm btn-primary flex-fill shadow">
@@ -871,6 +870,17 @@
                             </select>
                             <input id="plot_title_input_field" type="text" name="0" value="" placeholder="Enter a new plot title" class="form-control mb-1"
                                 onchange="updatePlotAttr(this)" style="background-color: whitesmoke;">
+                            <div class="d-flex flex-row  align-items-center flex-nowrap justify-content-center">
+                                <span class="p-1 flex-fill">
+                                x-axis labels size
+                                </span>
+                                <button type="button" onclick="updateHistLabelSize('+')" class="btn btn-primary m-1 shadow">
+                                    +
+                                </button>
+                                <button type="button" onclick="updateHistLabelSize('-')" class="btn btn-primary m-1 shadow">
+                                    -
+                                </button>
+                            </div>        
                         </div>        
                         </div> <!--Plotly.relayout('plotDiv_sample_accum_plot', {'title':'TEST'})-->
                     </div>    
@@ -892,7 +902,7 @@
                     </div>            
                     <hr style="padding: 1px;margin: 3px;">
                     <div id='sunburst_max_levels_panel' style="display: flex; flex-direction:row; justify-content: space-between; align-items: center">
-                    <label  for="sunburst_max_levels_slider"># of hierarchical levels to render:</label>
+                    <label  class="p-1" for="sunburst_max_levels_slider"># of hierarchical levels to render:</label>
                     <span style="font-weight:bold; padding: 0px 5px 0px 0px;" id="sunburst_max_levels_slider_current_value">3</span>
                     </div>
                     <input id="sunburst_max_levels_slider" style="width:100%" type="range" min="1" value="3" class="form-control-range"  step="1"

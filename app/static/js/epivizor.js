@@ -866,3 +866,36 @@ function switchLayout(){
     //document.querySelectorAll('#content div[class^=tabcontent]')[1].classList.contains('d-none')
 
 }
+
+/**
+ * Increase font size of the x-axis labels in bar/hist types of plots
+ * @param {*} action: string either + or - sign to indicate increase or decrease action 
+ * @returns return null value if no plot is selected or wrong plot type
+ */
+
+function updateHistLabelSize(action){
+    let plotDivName = document.querySelector('#plot_title_controls select').value;
+    if(document.querySelector(`#${plotDivName} .plot .barlayer`) === null){
+        Swal.fire(
+            {
+                text:'Change of x-axis labels for this plot type is not supported',
+                icon: 'error'
+            }
+        )
+        return null
+    }
+    if (plotDivName === ''){
+        Swal.fire({
+            text: 'No plot selected. Select a plot to change its font size',
+            icon: 'error'
+        })
+        return null
+    }
+    let currentFontSize = parseInt(document.querySelector(`#${plotDivName} .xaxislayer-above .xtick text`).style.fontSize);
+
+    if(action === '+'){
+        Plotly.update(`${plotDivName}`,{},{'xaxis.tickfont.size':currentFontSize+1})
+    }else if(action === '-'){
+        Plotly.update(`${plotDivName}`,{},{'xaxis.tickfont.size':currentFontSize-1})
+    }    
+}
