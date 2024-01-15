@@ -859,7 +859,8 @@ function switchLayout(){
             if(idx !== 0){
                 elem.classList.remove('d-block')
                 elem.classList.add('d-none')
-            }    
+            }   
+            elem.classList.remove('mb-1') 
         })
         Swal.fire({
             text:"Layout switched from List to Tab layout",
@@ -871,7 +872,7 @@ function switchLayout(){
         tabButtonsDiv.classList.add('d-none')
         tabButtonsDiv.classList.remove('d-block')
         document.querySelectorAll('#content div[class^=tabcontent]').forEach(elem =>{
-            elem.classList.add('d-block')
+            elem.classList.add('d-block','mb-1')
             elem.classList.remove('d-none')
         })
         Swal.fire({

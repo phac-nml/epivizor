@@ -1,4 +1,4 @@
-[![](https://img.shields.io/badge/render.com-deployed-brightgreen)](https://epivizor.onrender.com/dashboard)
+[![](https://img.shields.io/badge/render.com-deployed-brightgreen)](https://epivizor.onrender.com)
 ![](https://img.shields.io/github/v/release/phac-nml/epivizor?include_prereleases)
 ![](https://img.shields.io/github/last-commit/phac-nml/epivizor)
 ![](https://img.shields.io/github/issues/phac-nml/epivizor)
@@ -29,7 +29,7 @@ Epivizor addresses a key public health laboratories need to conveniently explore
 
 ## Availability
 - local installation and deployment from source code
-- publicly deployed demo instance at https://epivizor.onrender.com/dashboard (takes 20s to boot)
+- publicly deployed demo instance at https://epivizor.onrender.com (takes 20s to boot)
 
 ## Install 
 Installation is simple with [minimal set of dependencies](#dependencies)

@@ -12,10 +12,12 @@
 <script src="{{ url_for('static',filename='js/epivizor.js') }}"></script>
 
 
+
 <head>
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
     <title>EpiVizor</title>
     <link rel="shortcut icon" href="{{ url_for('static', filename='favicon.ico') }}">
+    
 </head>
 
 
@@ -171,7 +173,7 @@
 
 
 <div class="flex-container">
-    <div id="navbar" class="shadow">
+    <div id="navbar" class="border border rounded shadow">
         <div id="container_filters_div">
             <div class="accordion" id="myAccordion">
                 <div class="accordion-item">
@@ -962,8 +964,8 @@
         
 
     </div>
-    <div id="content"> 
-        <div id="load_spinner_div" class="position-relative w-100 h-100 d-flex flex-column align-items-center bg-white justify-content-center">
+    <div id="content" class="border rounded">
+        <div id="load_spinner_div" class="bg-white border-0 rounded position-relative w-100 h-100 d-flex flex-column align-items-center justify-content-center">
             <div class="spinner-border text-primary"  role="status"></div>
             <span class="text-primary">Loading data or rendering plots. Please wait ...</span>
             <label class="text-primary progressUploadBar" for="progressUploadBar" style="display: none">File upload progress</label>
@@ -971,7 +973,7 @@
         </div>
 
         {% if method == "GET" or get_flashed_messages()|length != 0 %}
-        <div id="info_message_file_upload_request" class="position-relative w-100 h-100 d-flex flex-column align-items-center bg-white justify-content-center">
+        <div id="info_message_file_upload_request" class="border-0 rounded bg-white position-relative w-100 h-100 d-flex flex-column align-items-center justify-content-center">
             <div class="tooltip">
                 <button type="button" class="btn btn-primary" onclick="openFileUploadDialog()">
                     <svg xmlns="http://www.w3.org/2000/svg" width="32px" height="32px" fill="currentColor" class="bi bi-upload" viewBox="0 0 16 16">
@@ -987,7 +989,7 @@
         {% endif %}
 
         {% if not render_splash_screen %}
-        <div class="d-flex flex-column plottabs shadow d-none">
+        <div class="d-flex flex-column plottabs d-none">
             <div class="buttons">
             </div>
         </div>
@@ -995,7 +997,7 @@
     </div>
 
 </div>
-<footer class="footer border-top">
+<footer class="footer">
     &copy; Copyright 2021. <a href="https://www.nml-lnm.gc.ca/">Canada's National Microbiology Laboratory</a>
 </footer>
 
