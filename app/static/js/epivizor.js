@@ -712,6 +712,7 @@ function renderplots(graphsMap){
 
                 Plotly.react('plotDiv_' + key, JSON.parse(graphsMap['figures'][key]))
                 generate_caption(graphsMap['captions'][key], 'plotDiv_' + key);
+                Plotly.update('plotDiv_' + key,{},{'margin':{l:1,r:1}});
                 
                 plotCounter++;
             }
@@ -851,8 +852,12 @@ function switchLayout(){
     
 
     let tabButtonsDiv = document.querySelector('.plottabs > div[class^=buttons]')
+    let plottabContent = document.querySelectorAll('.tabcontent')
+    let plotTabs = document.querySelector('.plottabs')
 
-    if (tabButtonsDiv.classList.contains('d-none') === true){ //from list --> tab layout
+    if (tabButtonsDiv.classList.contains('d-none') === true && plotTabs.classList.contains('flex-row') === true){ //from list --> tab layout
+        plotTabs.classList.remove('flex-row', 'flex-wrap');
+        plotTabs.classList.add('flex-column')
         tabButtonsDiv.classList.remove('d-none')
         tabButtonsDiv.classList.add('d-block')
         document.querySelectorAll('#content div[class^=tabcontent]').forEach((elem, idx) =>{
@@ -860,23 +865,30 @@ function switchLayout(){
                 elem.classList.remove('d-block')
                 elem.classList.add('d-none')
             }   
-            elem.classList.remove('mb-1') 
+            elem.classList.remove('mb-1', 'w-100', 'w-50') 
         })
+        resizePlots()
         Swal.fire({
-            text:"Layout switched from List to Tab layout",
+            text:"Layout switched to 'Tab' layout",
             icon: "info"
         })
-    }else{   
+    }else if(tabButtonsDiv.classList.contains('d-none') === false){   
         tabcontent = document.getElementsByClassName("tabcontent")                               //from tab --> list layout
         tabsPlotsControl(tabcontent[0].id, document.querySelector('.tablink'))
         tabButtonsDiv.classList.add('d-none')
         tabButtonsDiv.classList.remove('d-block')
         document.querySelectorAll('#content div[class^=tabcontent]').forEach(elem =>{
-            elem.classList.add('d-block','mb-1')
+            elem.classList.add('d-block','mb-1', 'w-100')
             elem.classList.remove('d-none')
         })
         Swal.fire({
-            text:"Layout switched from Tab to List layout",
+            text:"Layout switched to 'List' layout",
+            icon: "info"
+        })
+    }else if(tabButtonsDiv.classList.contains('d-none') === true && plottabContent[0].classList.contains('w-100') === true){
+        layoutGrid() 
+        Swal.fire({
+            text:"Layout switched to 'Grid' layout",
             icon: "info"
         })
     }
@@ -922,4 +934,31 @@ function updateHistLabelSize(action){
     }else if(action === '-'){
         Plotly.update(`${plotDivName}`,{},{'xaxis.tickfont.size':currentFontSize-1})
     }    
+}
+
+
+function layoutGrid(){
+    document.querySelector('.plottabs').classList.remove('flex-column')
+    document.querySelector('.plottabs').classList.add('flex-row','flex-wrap')
+    
+    document.querySelectorAll('.tabcontent').forEach(plotarea =>{
+        plotarea.classList.remove('w-100')
+        plotarea.classList.add('w-50','border','border-grey', 'rounded')
+    }
+    )
+
+    let plotDivs = document.querySelectorAll('.js-plotly-plot');
+    let newWidthPlots = document.querySelector('.js-plotly-plot').offsetWidth;
+    let newHeightPlots = $(window).height() 
+
+    if(plotDivs.length > 2){
+        newHeightPlots = $(window).height()/2
+    }
+        
+    plotDivs.forEach(plot => {
+        Plotly.relayout(plot.id,
+        {width: newWidthPlots, height: newHeightPlots})
+        
+    }
+    )
 }
