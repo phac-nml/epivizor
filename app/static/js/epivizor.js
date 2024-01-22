@@ -275,7 +275,7 @@ function updatePlotAttr(obj){
                 Plotly.restyle(graphDiv, {'name': [obj.value], 'showlegend':true}, trace_idx);
                 Plotly.relayout(graphDiv, {'showlegend':true});
             }else{
-                console.log("uknown input type "+obj.type+" (expected text or color). not graph updates")
+                console.log("unknown input type "+obj.type+" (expected text or color). not graph updates")
             }
         }
     })
@@ -422,7 +422,7 @@ function clearSession(targeturl){
  */
 function postPlotData(source_call_id=null, extract_filtered_excel_data = false) {
     let plotTitlesArray = Array.prototype.slice.call(document.querySelectorAll('.plot-container .gtitle')).map(title=>{return title.textContent})
-    let traceNamesNodeList =  document.querySelectorAll('#trace_controls input[type="text"]')
+    let previoustraceNamesNodeList =  document.querySelectorAll('#trace_controls input[type="text"]')
     let plotDivIds = Array.prototype.slice.call(document.querySelectorAll('.js-plotly-plot')).map(traceName => {return traceName.id})
 
     if($('.js-plotly-plot').length === 0){
@@ -562,8 +562,12 @@ function postPlotData(source_call_id=null, extract_filtered_excel_data = false) 
                 renderTraceControls(); 
                 populate_settings_applied();
                 updateSunburstVisibleLevels();
-                if(traceNamesNodeList.length == 2){
-                    traceNamesNodeList.forEach(node => {updatePlotAttr(node)})
+                
+                if(document.querySelectorAll('#trace_controls input[type="text"]').length === previoustraceNamesNodeList.length){
+                    previoustraceNamesNodeList.forEach((node, idx) => {
+                        document.querySelectorAll('#trace_controls input[type="text"]')[idx].value = node.value
+                        updatePlotAttr(node)
+                    })
                 }
                 plotDivIds.forEach((nodeName, idx) =>{Plotly.relayout(nodeName, {'title': plotTitlesArray[idx]})})
                 
