@@ -253,11 +253,11 @@ function updatePlotAttr(obj){
         let currentSelValue = $('#plot_title_selectpicker').selectpicker("option:selected").val();
         updatePlotTitlesSection();
         $("#plot_title_selectpicker").selectpicker('val',currentSelValue);
-        obj.value='';
+        
 
         Swal.fire({
             title: "Success",
-            text: "Plot title changed to '"+obj.value+"'",
+            text: `Plot title changed to "${obj.value}"`,
             icon: "success"
           });
         return 0
@@ -421,6 +421,10 @@ function clearSession(targeturl){
  * @returns - a bool value or undefined based on the case
  */
 function postPlotData(source_call_id=null, extract_filtered_excel_data = false) {
+    let plotTitlesArray = Array.prototype.slice.call(document.querySelectorAll('.plot-container .gtitle')).map(title=>{return title.textContent})
+    let traceNamesNodeList =  document.querySelectorAll('#trace_controls input[type="text"]')
+    let plotDivIds = Array.prototype.slice.call(document.querySelectorAll('.js-plotly-plot')).map(traceName => {return traceName.id})
+
     if($('.js-plotly-plot').length === 0){
         Swal.fire({
             text: "No rendered plots detected. Can not apply any filters!",
@@ -558,6 +562,12 @@ function postPlotData(source_call_id=null, extract_filtered_excel_data = false) 
                 renderTraceControls(); 
                 populate_settings_applied();
                 updateSunburstVisibleLevels();
+                if(traceNamesNodeList.length == 2){
+                    traceNamesNodeList.forEach(node => {updatePlotAttr(node)})
+                }
+                plotDivIds.forEach((nodeName, idx) =>{Plotly.relayout(nodeName, {'title': plotTitlesArray[idx]})})
+                
+                
             }
         },
         error:  function (request, status, error) {
@@ -784,6 +794,14 @@ function tabsPlotsControl(tabName,elmnt) {
  */
 function startFileUpload(){
         console.log('startFileUpload()')
+        console.log(document.querySelector("#upload_file_form input").value)
+        let uploadFormData = new FormData(document.getElementById("upload_file_form"))
+        var object = {};
+        uploadFormData.forEach((value, key) => object[key] = value);
+        JSON.stringify(object);
+        
+
+
         $('#content [id^="plotDiv"]').hide()
         $("#load_spinner_div").removeClass("d-none"); //show load spinner upon submission of the upload
         let is_plottabs_present = document.querySelector('.plottabs')
@@ -804,7 +822,7 @@ function startFileUpload(){
                 return xhr;
             },
             type: "POST",
-            data: new FormData($("#upload_file_form")[0]),
+            data: uploadFormData,
             contentType: false,
             cache: false,
             processData:false,

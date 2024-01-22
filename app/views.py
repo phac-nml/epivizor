@@ -20,7 +20,7 @@ from plotly.io.json import to_json_plotly
 from io import BytesIO
 
 
-app.config.from_object("config.ConfigDebug")
+
 cache = Cache(app=app, config={"CACHE_TYPE": "filesystem", 'CACHE_DIR': 'cache-dir', "CACHE_DEFAULT_TIMEOUT": 86400})
 
 
@@ -346,8 +346,8 @@ def dashboard():
     df_column_names = []
  
 
-
     form_data_dict = request.form.to_dict()  # convert form data from frontend to a dictionary
+    
 
     if form_data_dict == {}:
         clearsession() #clear any session cookies that might be left over on first page load (detected by no filters applied yet)  
@@ -355,6 +355,7 @@ def dashboard():
     if 'datafilters2apply' in form_data_dict:
         form_data_dict['datafilters2apply'] = json.loads(form_data_dict['datafilters2apply'])
     elif 'validatedfields_exp2obs_map' in form_data_dict:
+        print(form_data_dict['validatedfields_exp2obs_map'])
         form_data_dict['validatedfields_exp2obs_map'] = json.loads(form_data_dict['validatedfields_exp2obs_map'])
 
     print("Request dict form-data: {}".format(form_data_dict))
@@ -584,6 +585,7 @@ def dashboard():
         print("Started rendering plots on {} cases".format(df.shape))
 
         plot_title='Geolocation distribution ({})'.format(session['validatedfields_exp2obs_map']['geoloc_id'])
+        
         renderHistPlot(df.copy(), 'geoloc_id', form_data_dict, jsonPlotsDict, 'geoloc_chart',
                        plot_title,
                        df2=df2.copy())
@@ -1888,8 +1890,6 @@ def renderEpiCurve(df, x_time_var, form_data_dict, jsonPlotsDict, jsonPlotsDictK
         fig.update_layout(barmode='group', xaxis={'categoryorder':'category ascending'})
         print("Rendering drop down view menu")
         jsonPlotsDict['figures'][jsonPlotsDictKey] = to_json_plotly(fig, pretty=False, engine='orjson')
-        with open('epicurve_test.html','w') as fp:
-            fp.writelines(plotly.io.to_html(fig, include_plotlyjs='cdn',default_width='100%', default_height='100%'))
     else:
         print("Epidemiological plot not rendered due to no data in {} field (all values are missing)".format(x_time_var))
         jsonPlotsDict['figures'][jsonPlotsDictKey] = '{}'
