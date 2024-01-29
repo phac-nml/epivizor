@@ -2,6 +2,7 @@
 ![](https://img.shields.io/github/v/release/phac-nml/epivizor?include_prereleases)
 ![](https://img.shields.io/github/last-commit/phac-nml/epivizor)
 ![](https://img.shields.io/github/issues/phac-nml/epivizor)
+![](https://img.shields.io/github/downloads/phac-nml/epivizor/total.svg)
 
 # Epivizor
 Visual genomic epidemiology data analysis web application for hypothesis generation via interactive interfaces.
@@ -45,6 +46,11 @@ Run web application locally either by
 Note that default Flask port is 5000. This port could be changed by specifying the `--port` argument of `flask` or by modifying the `run.py`.
 
 Access the application locally by pointing your browser to `http://localhost:5000`
+
+
+## Build Docker image and lunch container
+This repository comes with `Dockerfile` that can be used to build a Docker image and lunch container. Simply run
+`docker build -t epivizor:latest .` to build image. Lunch container on port 5000 by running `docker run -p 5000:5000 -it  epivizor:latest`
 
 
 ## Dependencies
